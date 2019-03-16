@@ -1,0 +1,67 @@
+---
+title: "data2"
+author: "Ziwei ???Crystal??? Zang"
+date: "3/2/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+```
+
+```{r}
+#setwd("/Users/crystalzang/Desktop/hrs2016")
+
+
+#individual
+h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
+#household
+h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
+#Helper
+helper<- read_sav("spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))
+
+```
+
+
+#Rename Variables
+```{r}
+test<-helper%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
+
+setnames(helper, 
+         old=c( "PN", "PPN_SP", "PFAMR", "OPN", "PG069", "PG066", "PADLNDX", "PIADLNDX", "PG070", "GP071", "PG072", "PG073", "PG074"),
+          new=c("respondent_id", "helper_id", "whether_family_respondent", "other_person_number", "helper_relationship","who_helped_loop", "helper_ADL", "helper_IADL","freq_help", "days_help", "daily_help", "hours_help", "helper_sex"),  
+         skip_absent=TRUE)
+
+#No days_help
+
+helper_edit <- helper %>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(respondent_id, helper_id, whether_family_respondent, other_person_number, helper_relationship,who_helped_loop, helper_ADL, helper_IADL,freq_help, daily_help, hours_help, helper_sex)
+
+View(helper_edit)
+
+
+```
+
+
+```{r}
+
+respondent <- h16_R_all
+
+setnames(respondent, 
+         old = c("PC154","PC155","PC156", "PC157","PC158","PC159","PC160","PC161"),
+         new = c("feeling_tired","lose_appetite","appetite_increase", "trouble_fall_asleep", "freq_trouble_fall_asleep", "trouble_concentrating", "feeling_down", "thoughts_about_death" ))
+
+
+respondent <- respondent%>%
+  select(feeling_tired,lose_appetite,appetite_increase,trouble_fall_asleep, freq_trouble_fall_asleep, trouble_concentrating, feeling_down, thoughts_about_death)
+```
+

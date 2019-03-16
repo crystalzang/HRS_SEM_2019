@@ -1,0 +1,203 @@
+---
+title: "SEM_data"
+author: "Ziwei Crystal Zang"
+date: "2/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(haven)
+library(data.table)
+```
+
+```{r}
+setwd("/Users/crystalzang/Desktop/hrs2016")
+
+#Household level
+H16A_H <- read_sav("spss/H16A_H.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))
+
+H16E_H <- read_sav("spss/H16E_H.sav", encoding = NULL, user_na = FALSE) %>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))%>%
+  select(-HHID,-PSUBHH,-OSUBHH,-PPN_CS, -PPN_FAM,-PPN_FIN,-PPN_NCS,-PPN_NFAM,-PPN_NFIN)
+
+H16IO_H<- read_sav("spss/H16IO_H.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))%>%
+  select(-HHID,-PSUBHH,-OSUBHH,-PPN_CS, -PPN_FAM,-PPN_FIN,-PPN_NCS,-PPN_NFAM,-PPN_NFIN)
+
+H16H_H<- read_sav("spss/H16H_H.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))%>%
+  select(-HHID,-PSUBHH,-OSUBHH,-PPN_CS, -PPN_FAM,-PPN_FIN,-PPN_NCS,-PPN_NFAM,-PPN_NFIN)
+
+H16PR_H<- read_sav("spss/H16PR_H.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))%>%
+  select(-HHID,-PSUBHH,-OSUBHH,-PPN_CS, -PPN_FAM,-PPN_FIN,-PPN_NCS,-PPN_NFAM,-PPN_NFIN)
+
+H16Q_H <- read_sav("spss/H16Q_H.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PSUBHH, sep=""))%>%
+  select(-HHID,-PSUBHH,-OSUBHH,-PPN_CS, -PPN_FAM,-PPN_FIN,-PPN_NCS,-PPN_NFAM,-PPN_NFIN)
+
+h16_H1 <- left_join(H16A_H, H16E_H , by ="household_id")
+h16_H2 <- left_join(h16_H1 , H16IO_H , by ="household_id")
+h16_H3 <- left_join(h16_H2 , H16H_H , by ="household_id")
+h16_H4 <- left_join(h16_H3 , H16PR_H , by ="household_id")
+h16_H5 <- left_join(h16_H4 , H16Q_H , by ="household_id")
+
+rm(h16_H1,h16_H2, h16_H3,h16_H4, H16A_H, H16E_H, H16IO_H, H16H_H, H16PR_H , H16Q_H )
+```
+
+```{R}
+#Respondent level
+H16A_R <- read_sav("spss/H16A_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))
+
+H16B_R<- read_sav("spss/H16B_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16C_R <- read_sav("spss/H16C_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16D_R<- read_sav("spss/H16D_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16F_R<- read_sav("spss/H16F_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16G_R <- read_sav("spss/H16G_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16I_R <- read_sav("spss/H16I_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16IO_R <- read_sav("spss/H16IO_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16J_R<- read_sav("spss/H16J_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16J3_R<- read_sav("spss/H16J3_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+H16LB_R <- read_sav("spss/H16LB_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16M1_R<- read_sav("spss/H16M1_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16M2_R <- read_sav("spss/H16M2_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16N_R<- read_sav("spss/H16N_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16P_R <- read_sav("spss/H16P_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16S_R<- read_sav("spss/H16S_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16T_R <- read_sav("spss/H16T_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16TN_R<- read_sav("spss/H16TN_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16V_R <- read_sav("spss/H16V_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16W_R<- read_sav("spss/H16W_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16Y_R<- read_sav("spss/H16Y_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+H16PR_R<- read_sav("spss/H16PR_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(household_id = paste(HHID, PN, sep=""))%>%
+  select(-HHID, -PN, -PSUBHH, -OSUBHH, -PPN_SP, -PCSR, -PFAMR, -PFINR)
+
+
+h16_R1 <- left_join(H16A_R, H16B_R , by ="household_id")
+h16_R2 <- left_join(h16_R1 , H16C_R , by ="household_id")
+h16_R3  <- left_join(h16_R2 , H16D_R , by ="household_id")
+h16_R4  <- left_join(h16_R3 , H16F_R , by ="household_id") 
+h16_R5  <- left_join(h16_R4 , H16G_R , by ="household_id")
+
+h16_R6 <- left_join(h16_R5, H16I_R , by ="household_id")
+h16_R7 <- left_join(h16_R6 , H16IO_R , by ="household_id")
+h16_R8  <- left_join(h16_R7 , H16J_R , by ="household_id")
+h16_R9  <- left_join(h16_R8 , H16J3_R , by ="household_id")
+h16_R10  <- left_join(h16_R9 , H16LB_R , by ="household_id")
+h16_R11 <- left_join(h16_R10, H16M1_R , by ="household_id")
+h16_R12 <- left_join(h16_R11 , H16M2_R , by ="household_id")
+h16_R13  <- left_join(h16_R12 , H16N_R , by ="household_id")
+h16_R14  <- left_join(h16_R13 , H16P_R , by ="household_id")
+h16_R15  <- left_join(h16_R14 , H16PR_R , by ="household_id")
+h16_R16 <- left_join(h16_R15, H16S_R , by ="household_id")
+h16_R17 <- left_join(h16_R16 , H16T_R , by ="household_id")
+h16_R18  <- left_join(h16_R17 , H16TN_R , by ="household_id")
+h16_R19  <- left_join(h16_R18 , H16V_R , by ="household_id")
+h16_R20  <- left_join(h16_R19 , H16W_R , by ="household_id")
+h16_R21  <- left_join(h16_R20 , H16Y_R , by ="household_id")
+
+
+rm(H16A_R,H16B_R,H16C_R, H16D_R, H16F_R,H16G_R, h16_R5,H16I_R,H16IO_R,H16J_R,H16J3_R,H16LB_R,H16M1_R, H16M2_R, H16N_R,H16P_R,H16PR_R,H16S_R,H16T_R,H16TN_R,H16V_R, H16W_R, H16Y_R)
+
+write.csv(h16_R21, file="h16_R_all.csv", row.names=F)
+```
+
+```{r}
+#household member and child level
+H16E_MC<- read_sav("spss/H16E_MC.sav", encoding = NULL, user_na = FALSE)
+H16PR_MC<- read_sav("spss/H16PR_MC.sav", encoding = NULL, user_na = FALSE)
+
+#Sibling level
+H16F_SB <- read_sav("spss/H16F_SB.sav", encoding = NULL, user_na = FALSE)
+H16PR_SB<- read_sav("spss/H16PR_SB.sav", encoding = NULL, user_na = FALSE)
+
+#Helper
+H16G_HP<- read_sav("spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)
+
+#Transfer to child level
+H16E_TC <- read_sav("spss/H16E_TC.sav", encoding = NULL, user_na = FALSE)
+
+#Transfer from child level
+H16E_FC <- read_sav("spss/H16E_FC.sav", encoding = NULL, user_na = FALSE)
+
+#jobs level
+H16PR_JB <- read_sav("spss/H16PR_JB.sav", encoding = NULL, user_na = FALSE)
+
+#pension level
+H16J2_P <- read_sav("spss/H16J2_P.sav", encoding = NULL, user_na = FALSE)
+H16PR_P <- read_sav("spss/H16PR_P.sav", encoding = NULL, user_na = FALSE)
+```
+
+```{r}
+
+```
+
+
+#Rename Variables
+```{r}
+setnames(helper, 
+         old=c("HHID", "PN", "PSUBHH", "PPN_SP", "PFAMR", "OPN", "PG069", "PG066", "PADLNDX", "PIADLNDX", "PG070", "GP071", "PG072", "PG073", "PG074"),
+          new=c("household_id", "respondent_id", "sub_household_id", "helper_id", "whether_family_respondent", "other_person_number", "helper_relationship","who_helped_loop", "helper_ADL", "helper_IADL","freq_help", "days_help", "daily_help", "hours_help", "helper_sex"),  
+         skip_absent=TRUE)
+
+#No days_help
+
+helper <- helper %>%
+  select(household_id, respondent_id, sub_household_id, helper_id, whether_family_respondent, other_person_number, helper_relationship,who_helped_loop, helper_ADL, helper_IADL,freq_help, daily_help, hours_help, helper_sex)
+
+
+
+```
+
