@@ -13,19 +13,90 @@ library(haven)
 library(data.table)
 ```
 
+#Import Data
 ```{r}
-#setwd("/Users/crystalzang/Desktop/hrs2016")
+#setwd("/Users/crystalzang/Desktop/data")
 
 
 #individual
 h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
 #household
 h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
+
+
 #Helper
-helper<- read_sav("spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)%>%
-  mutate(household_id = paste(HHID, PSUBHH, sep=""))
+helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""))
 
 ```
+
+#Respondent who had IAD
+```{r}
+respondent_ds <-h16_R_all %>%
+  select(HHID, household_id, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014)%>%
+  filter(!is.na(PG032_1))%>%
+  mutate(helper_ID = paste(HHID,PG032_1, sep=""))
+
+#Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
+setnames(respondent_ds,
+         old=c("household_id","PG032_1", "PG033_1", "PG054_1", "PG055_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014"),
+         new = c("respondent_id","WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "IADLS_WHO_HELPS_1", "IADL_HELPER_RELATIONSHIP_TO_R_1","depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress"))
+
+test <- table(respondent_ds$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
+
+test <- table(respondent_ds$IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
+
+
+table(respondent_ds$dementia, useNA = "a")
+
+
+#Filter out adl indicators missing
+respondent_ds_adl<-respondent_ds%>%
+  filter(ADL_walk %in% c(1,5), 
+         ADL_shower %in% c(1,5),
+         ADL_eat %in% c(1,5), 
+         ADL_bed %in% c(1,5), 
+         ADL_toilet %in% c(1,5), 
+         ADL_dress %in% c(1,5))
+```
+
+#Helper
+```{r}
+helper_spouse <- helper%>%
+  select(HHID,PN, PPN_SP, respondent_id, PG069, PADLNDX, PIADLNDX)%>%
+  filter(PG069 == 2)
+
+setnames(helper_spouse,
+         old=c("PG069", "PADLNDX", "PIADLNDX"),
+         new = c("HELPER_RELATIONSHIP", "INDEX_ADL", "INDEX_IADL"))
+
+table(helper_spouse$HELPER_RELATIONSHIP,useNA="a")
+table(helper_spouse$INDEX_ADL,useNA="a")
+table(helper_spouse$INDEX_IADL,useNA="a")
+
+helper_valid <- helper_spouse%>%
+  filter()
+```
+
+
+
+#Join respondent with helper
+```{r}
+dyad <- left_join(respondent_ds,helper_spouse, by ="respondent_id")
+table(dyad$INDEX_ADL,useNA="a")
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 #Rename Variables
@@ -63,5 +134,18 @@ setnames(respondent,
 
 respondent <- respondent%>%
   select(feeling_tired,lose_appetite,appetite_increase,trouble_fall_asleep, freq_trouble_fall_asleep, trouble_concentrating, feeling_down, thoughts_about_death)
+```
+
+
+```{r}
+H16G_R <- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_R.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate(respondent_id = paste(HHID, PN, sep=""))
+```
+
+```{r}
+test<-H16G_R%>%
+  group_by(respondent_id)%>%
+  summarize(N=n())
+
 ```
 
