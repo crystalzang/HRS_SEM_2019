@@ -20,13 +20,10 @@ library(data.table)
 
 #individual
 h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
-h16_R_all_edit <- h16_R_all%>%
-  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP))
-
 
 
 #household
-h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
+#h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
 
 
 #Helper
@@ -34,6 +31,24 @@ helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding =
   mutate(respondent_id= paste(HHID, PN, sep=""))
 
 
+
+```
+
+
+
+```{r}
+'%ni%' <- Negate('%in%')
+
+class(h16_R_all$PPN_SP)
+
+#filter out not valid id
+h16_R_all_id <- h16_R_all%>%
+  filter(!is.na(PPN_SP))%>%
+  filter(PPN_SP %ni% c("811", "812", "821", "831", "832", "841", "822"))%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP, sep=""))
+
+test<-h16_R_all_id%>%
+  select(PPN_SP)
 
 ```
 
