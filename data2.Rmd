@@ -52,13 +52,13 @@ h16_R_all_id <- h16_R_all%>%
 ```{r}
 
 h16_R_all_id <-h16_R_all_id %>%
-  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014)
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014, PX060_R)
 
 
 #Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
 setnames(h16_R_all_id ,
-         old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014"),
-         new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress"))
+         old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014", "PX060_R"),
+         new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress", "Sex.R"))
 
 test <- table(h16_R_all_id$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
@@ -79,8 +79,9 @@ h16_R_all_adl<-h16_R_all_id %>%
 ```
 
 
-#Helper file
+#Join1: Helpers who were also respondents
 ```{r}
+table(helper$PG074, useNA = "a")
 
 helper <- helper%>%
   mutate(respondent_id= paste(HHID, PN, sep=""))%>%
@@ -93,13 +94,13 @@ test<-table(helper$spouse_id)
 
 
 helper <- helper %>%
-  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG069, PG070)
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG069, PG070, PG074)
 
 
 #Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
 setnames(helper ,
-         old=c("PG069", "PG070"),
-         new = c("Helper_Relationship", "Freqency_help"))
+         old=c("PG069", "PG070", "PG074"),
+         new = c("Helper_Relationship", "Freqency_help", "Helper_sex"))
 
 
 #test <- left_join(helper, respondent_ds, by= c("helper_ID"="respondent_id"))%>%
@@ -109,31 +110,110 @@ helper<- helper%>%
   filter(Helper_Relationship == "2")
 
 helper_id<-helper%>%
-  select(respondent_id, Helper_Relationship, Freqency_help)
+  select(respondent_id, spouse_id, Helper_Relationship, Freqency_help, Helper_sex)
+
 ```
 
-#Join respondent with helper
+#Join1
 ```{r}
-dyad <- left_join(h16_R_all_adl, helper_id, by = c("spouse_id"="respondent_id"))
+dyad <- left_join(h16_R_all_adl, helper_id, by = c("respondent_id"="spouse_id"))%>%
+  mutate(respondent="Y",
+         helper = if_else(Helper_Relationship == 2, "Y", "N"),
+         resondent_and_helper= if_else(respondent=="Y" & helper=="Y", "Y", "N"))%>%
+  mutate(identity = if_else(resondent_and_helper=="Y", "Resondent and helper", "Only respondent")) ##I have a bug here. I don't know why the alternative level"Only respondent" is not showing up here
+
+                           
+table(dyad$identity)
+
+test<- dyad%>%
+  group_by(respondent, helper, resondent_and_helper)%>%
+  summarize(N=n())
+
 class(dyad$Helper_Relationship)
 
-dyad <- dyad %>%
-  mutate(helper = if_else(Helper_Relationship == 2, "Y", "N"))
+#A dataset that contains all the helpers who are also respondents. Spouse_id is the helper's id. Respondent_id is their spouse's id. 
+helper_and_respondent <- dyad %>%
+  filter(helper== "Y")%>%
+  mutate(Sex.H = Sex.R)
 
-#A dataset that contains all the helpers who are also respondents
-helper_also_respondent <- dyad %>%
-  filter(helper== "Y")
 
-#Prep dataset ready for join. Only include 2 variables
-helper_also_respondent_id<-helper_also_respondent%>%
-  select(respondent_id, helper)
+#respondent_only <- setdiff(dyad, helper_and_respondent)
+
+
+#Prep dataset ready for join. Only include several variables
+helper_and_respondent_id<-helper_and_respondent%>%
+  select(respondent_id,spouse_id, helper)
 
 #Join
-dyad_couple <- left_join(dyad, helper_also_respondent_id, by= c("spouse_id"="respondent_id" ))
+#We want to find the mathcing respondents to our helpers
+#Matching respondent_id (the people those helpers are helping) to the respondent in dyad data.
+dyad_couple <- left_join(dyad, helper_also_respondent_id, by=c("spouse_id" ="respondent_id"))
+
 
 #We are using both helper.x and helper.y to identify couples
+#helper.x means help giver. help.y means help recipient.
 dyad_couple <- dyad_couple%>%
-  filter(helper.x=="Y" | helper.y =="Y")
+  filter(helper.x=="Y" | helper.y =="Y")%>%
+  select(-respondent_id.y)
+
+
+
+#single people
+test<-dyad_couple%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
+```
+
+
+#Join2: Helpers who were not respondents
+```{r}
+h16_R_all_adl_id<-h16_R_all_adl%>%
+  select(respondent_id, Sex.R)
+
+#match help recipients to their helpers
+#helper_all <- left_join(helper_id, h16_R_all_adl_id, by ="respondent_id")
+respondent_id <- setdiff(helper$respondent_id, helper_also_respondent$respondent_id)
+
+
+
+#We want to set the difference between dyad_all with help_also_respondent to find those helpers who only helped but were not respondents.
+#And then, we want to add them to our dyad.
+
+helper_only_id <-as.data.frame(respondent_id)%>%
+  mutate(identity="Helper_only")
+
+helper_only2 <- left_join(helper, helper_only_id, by="respondent_id")%>%
+  filter(identity=="Helper_only")
+```
+
+#Join2: Helpers who were not respondents
+```{r}
+##Join again
+helper_only2_id<-helper_only2%>%
+  select(spouse_id, Helper_Relationship, Freqency_help, Helper_sex)
+
+
+dyad2 <- left_join(h16_R_all_adl, helper_only2_id, by ="spouse_id")%>%
+  filter(Helper_Relationship==2)%>%
+  mutate(respondent=NA,
+         helper.x ="Y",
+         helper.y = "N",
+         resondent_and_helper= "N",
+         identity = "Only helper")
+        
+
+```
+
+#Combine 2 dyads
+```{r}
+dyad_complete <- rbind(dyad_couple, dyad2)
+
+#single people
+test<-dyad_complete%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
 ```
 
 
@@ -151,9 +231,9 @@ dyad_couple <- dyad_couple%>%
 
 
 
-
 ############################################################
 ############################################################
+#Tests
 
 #Helper hour
 ```{r}
@@ -189,11 +269,6 @@ table(helper_spouse$INDEX_IADL,useNA="a")
 helper_valid <- helper_spouse%>%
   filter()
 ```
-
-
-
-
-
 
 
 
