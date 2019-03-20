@@ -27,15 +27,14 @@ h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
 
 
 #Helper
-helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)%>%
-  mutate(respondent_id= paste(HHID, PN, sep=""))
+helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)
 
 
 
 ```
 
 
-
+#Respondent file create id
 ```{r}
 '%ni%' <- Negate('%in%')
 
@@ -47,24 +46,21 @@ h16_R_all_id <- h16_R_all%>%
   filter(PPN_SP %ni% c("811", "812", "821", "831", "832", "841", "822"))%>%
   mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP, sep=""))
 
-test<-h16_R_all_id%>%
-  select(PPN_SP)
-
 ```
 
-#Respondent who had IAD
+#Respondent file select variables
 ```{r}
-respondent_ds <-h16_R_all %>%
-  select(HHID, household_id, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014)%>%
-  filter(!is.na(PG032_1))%>%
-  mutate(helper_ID = paste(HHID,PG032_1, sep=""))
+
+h16_R_all_id <-h16_R_all_id %>%
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014)
+
 
 #Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
-setnames(respondent_ds,
-         old=c("household_id","PG032_1", "PG033_1", "PG054_1", "PG055_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014"),
-         new = c("respondent_id","WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "IADLS_WHO_HELPS_1", "IADL_HELPER_RELATIONSHIP_TO_R_1","depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress"))
+setnames(h16_R_all_id ,
+         old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014"),
+         new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress"))
 
-test <- table(respondent_ds$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
+test <- table(h16_R_all_id$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
 test <- table(respondent_ds$IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
@@ -73,7 +69,7 @@ table(respondent_ds$dementia, useNA = "a")
 
 
 #Filter out adl indicators missing
-respondent_ds_adl<-respondent_ds%>%
+h16_R_all_adl<-h16_R_all_id %>%
   filter(ADL_walk %in% c(1,5), 
          ADL_shower %in% c(1,5),
          ADL_eat %in% c(1,5), 
@@ -83,20 +79,81 @@ respondent_ds_adl<-respondent_ds%>%
 ```
 
 
-#Test
+#Helper file
 ```{r}
-helper <- respondent_ds %>%
-  select(helper_ID)%>%
-  mutate(helper_valid = 1)
+
+helper <- helper%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""))%>%
+  filter(!is.na(PPN_SP))%>%
+  filter(PPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP, sep=""))
+
+test<-table(helper$PPN_SP)
+test<-table(helper$spouse_id)
 
 
-test <- left_join(helper, respondent_ds, by= c("helper_ID"="respondent_id"))%>%
-  filter(!is.na(HHID))
+helper <- helper %>%
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG069, PG070)
 
 
+#Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
+setnames(helper ,
+         old=c("PG069", "PG070"),
+         new = c("Helper_Relationship", "Freqency_help"))
 
+
+#test <- left_join(helper, respondent_ds, by= c("helper_ID"="respondent_id"))%>%
+#  filter(!is.na(HHID))
+
+helper<- helper%>%
+  filter(Helper_Relationship == "2")
+
+helper_id<-helper%>%
+  select(respondent_id, Helper_Relationship, Freqency_help)
 ```
 
+#Join respondent with helper
+```{r}
+dyad <- left_join(h16_R_all_adl, helper_id, by = c("spouse_id"="respondent_id"))
+class(dyad$Helper_Relationship)
+
+dyad <- dyad %>%
+  mutate(helper = if_else(Helper_Relationship == 2, "Y", "N"))
+
+#A dataset that contains all the helpers who are also respondents
+helper_also_respondent <- dyad %>%
+  filter(helper== "Y")
+
+#Prep dataset ready for join. Only include 2 variables
+helper_also_respondent_id<-helper_also_respondent%>%
+  select(respondent_id, helper)
+
+#Join
+dyad_couple <- left_join(dyad, helper_also_respondent_id, by= c("spouse_id"="respondent_id" ))
+
+#We are using both helper.x and helper.y to identify couples
+dyad_couple <- dyad_couple%>%
+  filter(helper.x=="Y" | helper.y =="Y")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################################################
+############################################################
 
 #Helper hour
 ```{r}
@@ -134,13 +191,6 @@ helper_valid <- helper_spouse%>%
 ```
 
 
-
-#Join respondent with helper
-```{r}
-dyad <- left_join(respondent_ds,helper_spouse, by ="respondent_id")
-table(dyad$INDEX_ADL,useNA="a")
-
-```
 
 
 
