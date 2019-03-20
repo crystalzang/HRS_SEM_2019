@@ -1,6 +1,6 @@
 ---
 title: "data2"
-author: "Ziwei ???Crystal??? Zang"
+author: "Ziwei Crystal Zang"
 date: "3/2/2019"
 output: html_document
 ---
@@ -20,6 +20,11 @@ library(data.table)
 
 #individual
 h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
+h16_R_all_edit <- h16_R_all%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP))
+
+
+
 #household
 h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
 
@@ -27,6 +32,8 @@ h16_H_all <- read_csv("~/Desktop/HRS_SEM/h16_H_all.csv")
 #Helper
 helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)%>%
   mutate(respondent_id= paste(HHID, PN, sep=""))
+
+
 
 ```
 
@@ -60,11 +67,44 @@ respondent_ds_adl<-respondent_ds%>%
          ADL_dress %in% c(1,5))
 ```
 
+
+#Test
+```{r}
+helper <- respondent_ds %>%
+  select(helper_ID)%>%
+  mutate(helper_valid = 1)
+
+
+test <- left_join(helper, respondent_ds, by= c("helper_ID"="respondent_id"))%>%
+  filter(!is.na(HHID))
+
+
+
+```
+
+
+#Helper hour
+```{r}
+test<-helper%>%
+  group_by(PG069, PPN_SP)%>%
+  summarize(N=n())
+
+
+test<-helper%>%
+  group_by(respondent_id, PPN_SP)%>%
+  summarise(N=n())
+ 
+test_hh<- h16_R_all%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""))%>%
+  group_by(HHID)%>%
+  summarise(N=n())
+```
+
 #Helper
 ```{r}
 helper_spouse <- helper%>%
   select(HHID,PN, PPN_SP, respondent_id, PG069, PADLNDX, PIADLNDX)%>%
-  filter(PG069 == 2)
+  filter(PG069 == 2) #only spouse
 
 setnames(helper_spouse,
          old=c("PG069", "PADLNDX", "PIADLNDX"),
