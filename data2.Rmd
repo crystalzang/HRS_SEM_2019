@@ -62,7 +62,7 @@ setnames(h16_R_all_id ,
 
 test <- table(h16_R_all_id$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
-test <- table(respondent_ds$IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
+test <- table(h16_R_all_id $IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
 
 table(respondent_ds$dementia, useNA = "a")
@@ -147,14 +147,14 @@ helper_and_respondent_id<-helper_and_respondent%>%
 #Join
 #We want to find the mathcing respondents to our helpers
 #Matching respondent_id (the people those helpers are helping) to the respondent in dyad data.
-dyad_couple <- left_join(dyad, helper_also_respondent_id, by=c("spouse_id" ="respondent_id"))
+dyad_couple <- left_join(dyad, helper_and_respondent_id, by=c("spouse_id" ="respondent_id"))
 
 
 #We are using both helper.x and helper.y to identify couples
 #helper.x means help giver. help.y means help recipient.
 dyad_couple <- dyad_couple%>%
   filter(helper.x=="Y" | helper.y =="Y")%>%
-  select(-respondent_id.y)
+  select(-respondent_id.y, -spouse_id.y)
 
 
 
@@ -173,7 +173,7 @@ h16_R_all_adl_id<-h16_R_all_adl%>%
 
 #match help recipients to their helpers
 #helper_all <- left_join(helper_id, h16_R_all_adl_id, by ="respondent_id")
-respondent_id <- setdiff(helper$respondent_id, helper_also_respondent$respondent_id)
+respondent_id <- setdiff(helper$respondent_id, helper_and_respondent$respondent_id)
 
 
 
