@@ -27,7 +27,7 @@ h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
 
 
 #Helper
-helper<- read_sav("/Users/crystalzang/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)
+helper<- read_sav("/Users/elaineyx/Desktop/data/H16G_HP.sav", encoding = NULL, user_na = FALSE)
 
 
 
@@ -65,7 +65,6 @@ test <- table(h16_R_all_id$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 test <- table(h16_R_all_id $IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
 
-table(respondent_ds$dementia, useNA = "a")
 
 
 #Filter out adl indicators missing
