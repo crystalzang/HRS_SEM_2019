@@ -27,7 +27,8 @@ h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
 
 
 #Helper
-helper<- read_sav("/Users/elaineyx/Desktop/data/H16G_HP.sav", encoding = NULL, user_na = FALSE)
+helper<- read_sav("~/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)
+
 
 
 
@@ -50,12 +51,10 @@ h16_R_all_id <- h16_R_all%>%
 
 #Respondent file select variables
 ```{r}
-
 h16_R_all_id <-h16_R_all_id %>%
   select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014, PX060_R)
 
 
-#Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
 setnames(h16_R_all_id ,
          old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014", "PX060_R"),
          new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress", "Sex.R"))
@@ -69,12 +68,22 @@ test <- table(h16_R_all_id $IADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
 #Filter out adl indicators missing
 h16_R_all_adl<-h16_R_all_id %>%
-  filter(ADL_walk %in% c(1,5), 
+  filter(#ADL
+         ADL_walk %in% c(1,5), 
          ADL_shower %in% c(1,5),
          ADL_eat %in% c(1,5), 
          ADL_bed %in% c(1,5), 
          ADL_toilet %in% c(1,5), 
-         ADL_dress %in% c(1,5))
+         ADL_dress %in% c(1,5),
+         #depression
+         Depression_depressed %in% c(1,5), 
+         Depression_efforts %in% c(1,5),
+         Depression_sleep %in% c(1,5), 
+         Depression_happy %in% c(1,5), 
+         Depression_loneliness %in% c(1,5), 
+         Depression_enjoy %in% c(1,5),
+         Depression_sad %in% c(1,5),
+         Depression_unmotivated %in% c(1,5))
 ```
 
 
