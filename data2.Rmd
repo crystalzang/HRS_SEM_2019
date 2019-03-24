@@ -3,6 +3,8 @@ title: "data2"
 author: "Ziwei Crystal Zang"
 date: "3/2/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -82,7 +84,29 @@ h16_R_all_adl<-h16_R_all_id %>%
          Depression_loneliness %in% c(1,5), 
          Depression_enjoy %in% c(1,5),
          Depression_sad %in% c(1,5),
-         Depression_unmotivated %in% c(1,5))
+         Depression_unmotivated %in% c(1,5)) %>%
+        #relevel ADL: change 5 (No) to 0
+    mutate(ADL_walk2= if_else(ADL_walk==5, 0, 1),
+           ADL_shower2= if_else(ADL_shower==5, 0, 1),
+           ADL_eat2= if_else(ADL_eat==5, 0, 1),
+           ADL_bed2= if_else(ADL_bed==5, 0, 1),
+           ADL_toilet2= if_else(ADL_toilet==5, 0, 1),
+           ADL_dress2= if_else(ADL_dress==5, 0, 1),
+           ADL = ADL_walk2+ADL_shower2+ADL_eat2+ADL_bed2+ADL_toilet2+ADL_dress2) %>%
+    mutate(Depression_depressed2=if_else(Depression_depressed==5, 0, 1),
+           Depression_efforts2= if_else(Depression_efforts==5, 0, 1),
+           Depression_sleep2= if_else( Depression_sleep==5, 0, 1),
+           Depression_happy2= if_else(Depression_happy==5, 0, 1),
+           Depression_loneliness2= if_else(Depression_loneliness==5, 0, 1),
+           Depression_enjoy2= if_else(Depression_enjoy==5, 0, 1),
+           Depression_sad2= if_else(Depression_sad==5, 0, 1),
+           Depression_unmotivated2= if_else(Depression_unmotivated==5, 0, 1),
+           Depression=Depression_depressed2+Depression_efforts2+Depression_sleep2+Depression_loneliness2+Depression_sad2+Depression_unmotivated2-Depression_happy2-Depression_enjoy2)
+
+ggplot( data = h16_R_all_adl, aes(x = ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL level distribution") 
+
+ggplot( data = h16_R_all_adl, aes(x = Depression)) + geom_histogram(binwidth = 1) + labs(title = "Depression level distribution") 
+
 ```
 
 
