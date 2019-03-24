@@ -28,10 +28,6 @@ h16_R_all <- read_csv("~/Desktop/data/h16_R_all.csv")
 
 #Helper
 helper<- read_sav("~/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = FALSE)
-
-
-
-
 ```
 
 
@@ -41,7 +37,8 @@ helper<- read_sav("~/Desktop/data/spss/H16G_HP.sav", encoding = NULL, user_na = 
 
 class(h16_R_all$PPN_SP)
 
-#filter out not valid id
+#filter out not valid id "Spouse of Non-Original Respondent"
+
 h16_R_all_id <- h16_R_all%>%
   filter(!is.na(PPN_SP))%>%
   filter(PPN_SP %ni% c("811", "812", "821", "831", "832", "841", "822"))%>%
@@ -52,12 +49,14 @@ h16_R_all_id <- h16_R_all%>%
 #Respondent file select variables
 ```{r}
 h16_R_all_id <-h16_R_all_id %>%
-  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PG016, PG021, PG023, PG025, PG030, PG014, PX060_R)
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PD110, PD111, PD112, PD113, PD114, PD115, PD116, PD117, PG016, PG021, PG023, PG025, PG030, PG014, PX060_R)
 
 
+#Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
+#Depression? 
 setnames(h16_R_all_id ,
-         old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PG016", "PG021", "PG023","PG025", "PG030", "PG014", "PX060_R"),
-         new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress", "Sex.R"))
+         old=c("PG032_1", "PG033_1", "PZ260", "PZ261", "PZ262", "PD110", "PD111", "PD112", "PD113", "PD114", "PD115", "PD116", "PD117","PG016", "PG021", "PG023","PG025", "PG030", "PG014", "PX060_R"),
+         new = c("WHO_HELPS_MOST_ADL_1", "ADL_HELPER_RELATIONSHIP_TO_R_1", "depression", "alzheimer","dementia", "Depression_depressed","Depression_efforts","Depression_sleep","Depression_happy","Depression_loneliness","Depression_enjoy","Depression_sad","Depression_unmotivated","ADL_walk", "ADL_shower", "ADL_eat", "ADL_bed", "ADL_toilet", "ADL_dress", "Sex.R"))
 
 test <- table(h16_R_all_id$ADL_HELPER_RELATIONSHIP_TO_R_1, useNA = "a")
 
