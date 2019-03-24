@@ -13,6 +13,8 @@ library(dplyr)
 library(readr)
 library(haven)
 library(data.table)
+library(ggplot2)
+library(mosaic)
 ```
 
 #Import Data
@@ -85,14 +87,16 @@ h16_R_all_adl<-h16_R_all_id %>%
          Depression_enjoy %in% c(1,5),
          Depression_sad %in% c(1,5),
          Depression_unmotivated %in% c(1,5)) %>%
-        #relevel ADL: change 5 (No) to 0
+          #relevel ADL: change 5 (No) to 0
     mutate(ADL_walk2= if_else(ADL_walk==5, 0, 1),
            ADL_shower2= if_else(ADL_shower==5, 0, 1),
            ADL_eat2= if_else(ADL_eat==5, 0, 1),
            ADL_bed2= if_else(ADL_bed==5, 0, 1),
            ADL_toilet2= if_else(ADL_toilet==5, 0, 1),
            ADL_dress2= if_else(ADL_dress==5, 0, 1),
+           #ADL sum score
            ADL = ADL_walk2+ADL_shower2+ADL_eat2+ADL_bed2+ADL_toilet2+ADL_dress2) %>%
+          #relevel depression: change 5 (No) to 0
     mutate(Depression_depressed2=if_else(Depression_depressed==5, 0, 1),
            Depression_efforts2= if_else(Depression_efforts==5, 0, 1),
            Depression_sleep2= if_else( Depression_sleep==5, 0, 1),
@@ -101,21 +105,31 @@ h16_R_all_adl<-h16_R_all_id %>%
            Depression_enjoy2= if_else(Depression_enjoy==5, 0, 1),
            Depression_sad2= if_else(Depression_sad==5, 0, 1),
            Depression_unmotivated2= if_else(Depression_unmotivated==5, 0, 1),
-           Depression=Depression_depressed2+Depression_efforts2+Depression_sleep2+Depression_loneliness2+Depression_sad2+Depression_unmotivated2-Depression_happy2-Depression_enjoy2)
+           #Depression sum score
+           Depression=Depression_depressed2+Depression_efforts2+Depression_sleep2+Depression_loneliness2+Depression_sad2+Depression_unmotivated2-Depression_happy2-Depression_enjoy2+2) #not sure if we want to add 2
 
 ggplot( data = h16_R_all_adl, aes(x = ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL level distribution") 
+table(h16_R_all_adl$ADL,useNA = "a")
 
 ggplot( data = h16_R_all_adl, aes(x = Depression)) + geom_histogram(binwidth = 1) + labs(title = "Depression level distribution") 
+table(h16_R_all_adl$Depression,useNA = "a")
+
+
+
+h16_R_all_adl_id <-h16_R_all_adl%>%
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, WHO_HELPS_MOST_ADL_1, ADL_HELPER_RELATIONSHIP_TO_R_1, Sex.R, ADL, Depression)%>%
+  filter(ADL>0) 
+#  mutate(ADL_log = log10(ADL), Depression_log = log10(Depression))
 
 ```
 
 
 #Join1: Helpers who were also respondents
 ```{r}
+#a lot of helper sex NA, thus not a good variable
 table(helper$PG074, useNA = "a")
 
 helper <- helper%>%
-  mutate(respondent_id= paste(HHID, PN, sep=""))%>%
   filter(!is.na(PPN_SP))%>%
   filter(PPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
   mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, PPN_SP, sep=""))
@@ -125,14 +139,13 @@ test<-table(helper$spouse_id)
 
 
 helper <- helper %>%
-  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG069, PG070, PG074)
+  select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG069, PG070)
 
 
 #Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
 setnames(helper ,
-         old=c("PG069", "PG070", "PG074"),
-         new = c("Helper_Relationship", "Freqency_help", "Helper_sex"))
-
+         old=c("PG069", "PG070"),
+         new = c("Helper_Relationship", "Freqency_help"))
 
 #test <- left_join(helper, respondent_ds, by= c("helper_ID"="respondent_id"))%>%
 #  filter(!is.na(HHID))
@@ -141,7 +154,7 @@ helper<- helper%>%
   filter(Helper_Relationship == "2")
 
 helper_id<-helper%>%
-  select(respondent_id, spouse_id, Helper_Relationship, Freqency_help, Helper_sex)
+  select(respondent_id, spouse_id, Helper_Relationship, Freqency_help)
 
 ```
 
