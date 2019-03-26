@@ -33,11 +33,36 @@ id <- rand %>%
         )
 
 skim(id)
-
+#rename
 setnames(id ,
          old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD"),
          new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD"))
 
+#rename
+setnames(id ,
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD"))
+```
+
+#Couple Investigation
+```{r}
+#check couple 
+id_group<-id%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
+
+#single 
+id_single <- id_group%>%
+  filter(N==1)%>%
+  select(HHID)
+
+id_single <-unlist(id_single)
+id_single
+```
+
+#Variable Investigation
+```{r}
 ggplot( data = id, aes(x = R_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL respondent") 
 ggplot( data = id, aes(x = S_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL spouse") 
 
