@@ -1,0 +1,82 @@
+---
+title: "rand"
+author: "CZ"
+date: "3/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
+```
+
+```{r}
+rand <- read_csv("~/Desktop/data/randhrs.csv")
+
+#glimpse(rand)
+```
+
+
+#Extract variables and Data Exploration
+```{r}
+id <- rand %>%
+  select(HHIDPN, HHID, PN, RAHHIDPN,
+          R12CESD, S12CESD, #CESD Score, binary level yes or no
+         
+          R12ADLA, S12ADLA #ADL Summary: sum ADLs where Respondent reports any difficulty
+        )
+
+skim(id)
+#rename
+setnames(id ,
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD"))
+
+#filter out non-dyad individuals
+id_valid <- id%>%
+  filter(!is.na(R_ADL) | !is.na(S_ADL), !is.na(R_CESD), !is.na(S_CESD))
+
+#There shouldn't be any missing R_ADL
+tally(id_valid$S_ADL)
+
+#Missing S_ADL meaning that those helper don't have ADL
+tally(id_valid$S_ADL)
+
+#There shouldn't be any missing R_CESD, we want all informaiton
+tally(id_valid$R_CESD)
+
+#There shouldn't be any missing S_CESD, we want all informaiton
+tally(id_valid$S_CESD)
+
+```
+
+#Couple Investigation
+```{r}
+#check couple
+id_group<-id_valid%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
+#Only 2 is reasonable
+tally(id_group$N)
+
+#Valid dyad HHID 
+id_valid_dyad_id <- id_group%>%
+  filter(N==2)%>%
+  select(HHID)%>%
+  mutate(dyad = "Y")
+
+#Cleaned dyad data
+id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
+  filter(dyad == "Y")
+
+write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
+```
+
+

@@ -1,0 +1,27 @@
+---
+title: "rand_dyad"
+author: "CZ"
+date: "3/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+
+```
+
+```{r}
+rand_dyad <- read_csv("rand_dyad.csv")
+```
+
+
+#Variable Investigation
+```{r}
+ggplot( data = id_valid_dyad, aes(x = R_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL respondent") 
+ggplot( data = id_valid_dyad, aes(x = S_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL spouse") 
+
+ggplot( data = id_valid_dyad, aes(x = R_CESD)) + geom_histogram(binwidth = 1) + labs(title = "CESD respondent") 
+ggplot( data = id_valid_dyad, aes(x = S_CESD)) + geom_histogram(binwidth = 1) + labs(title = "CESD spouse") 
+
+```
