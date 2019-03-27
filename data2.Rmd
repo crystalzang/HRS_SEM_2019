@@ -56,6 +56,7 @@ h16_R_all_id <-h16_R_all_id %>%
   select(HHID, respondent_id, PN, spouse_id, PPN_SP, PG032_1, PG033_1, PG054_1,PG055_1, PZ260, PZ261, PZ262, PD110, PD111, PD112, PD113, PD114, PD115, PD116, PD117, PG016, PG021, PG023, PG025, PG030, PG014, PX060_R)
 
 
+
 #Do we instead us PC? PC271,PC272,PC273 in section C: Physical Health (respondent)
 #Depression? 
 setnames(h16_R_all_id ,
