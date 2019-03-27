@@ -14,10 +14,40 @@ library(readr)
 ```{r}
 rand_dyad <- read_csv("rand_dyad.csv")
 ```
+# Three dyads
+
+## 1. Both respondent and helper
+```{r}
+dyad_1 <- rand_dyad%>%
+  filter(R_ADL >0 & S_ADL>0)
+
+test <- dyad_1%>%
+  group_by(R_ADL, S_ADL)%>%
+  summarize(N=n())
+
+```
+
+
+
+## 2. Helper don't have ADL
+```{r}
+dyad_2 <- setdiff(rand_dyad, dyad_1, by=HHIDPN)%>%
+  filter(!is.na(R_ADL), !is.na(S_ADL))
+
+test <- dyad_2%>%
+  group_by(R_ADL, S_ADL)%>%
+  summarize(N=n())
+```
+
 
 
 #Variable Investigation
 ```{r}
+test <- rand_dyad%>%
+  group_by(R_ADL, S_ADL)%>%
+  summarize(N=n())
+
+
 ggplot( data = id_valid_dyad, aes(x = R_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL respondent") 
 ggplot( data = id_valid_dyad, aes(x = S_ADL)) + geom_histogram(binwidth = 1) + labs(title = "ADL spouse") 
 
