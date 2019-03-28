@@ -24,6 +24,7 @@ rand <- read_csv("~/Desktop/data/randhrs.csv")
 
 
 #Extract variables and Data Exploration
+R12... or S12... indicates 12 wave, which is from 2014. 
 ```{r}
 id <- rand %>%
   select(HHIDPN, HHID, PN, RAHHIDPN,
@@ -40,7 +41,7 @@ setnames(id ,
 
 #filter out non-dyad individuals
 id_valid <- id%>%
-  filter(!is.na(R_ADL) | !is.na(S_ADL), !is.na(R_CESD), !is.na(S_CESD))
+  filter(!is.na(R_ADL), !is.na(S_ADL), !is.na(R_CESD), !is.na(S_CESD))
 
 #There shouldn't be any missing R_ADL
 tally(id_valid$S_ADL)
@@ -53,7 +54,6 @@ tally(id_valid$R_CESD)
 
 #There shouldn't be any missing S_CESD, we want all informaiton
 tally(id_valid$S_CESD)
-
 ```
 
 #Couple Investigation
@@ -76,7 +76,22 @@ id_valid_dyad_id <- id_group%>%
 id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
   filter(dyad == "Y")
 
-write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
+#write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
 ```
+
+# Helper READ IN
+```{r}
+helper_16 <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)
+
+```
+
+
+```{r}
+
+```
+
+
+
+
 
 
