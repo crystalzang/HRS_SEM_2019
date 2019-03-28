@@ -81,13 +81,14 @@ id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
 
 # Helper READ IN
 ```{r}
-helper_16 <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)
+helper_16 <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+  mutate()
 
 ```
 
 
 ```{r}
-
+dyad_helper <- left_join(id_valid_dyad, helper_16, by= "RAHHIDPN")
 ```
 
 
