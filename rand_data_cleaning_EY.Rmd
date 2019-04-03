@@ -106,3 +106,31 @@ helper_2014 <- helper_2014 %>%
 rand_dyad <- left_join(rand_dyad,helper_2014,by="HHIDPN")
 ```
 
+##helping hours 
+```{r}
+helper_2014 <- read_sav("~/Desktop/data/H14G_HP.sav", encoding = NULL, user_na = FALSE)
+
+```
+
+```{r}
+helper_2014 <- helper_2014 %>%
+  filter(!is.na(OPN_SP))
+#convert NA value in month/wk/day to 0 
+helper_2014 <- helper_2014 %>%
+  mutate(OG070 = coalesce(OG070,0),
+         OG071 = coalesce(OG071,0),
+         OG072 = coalesce(OG072,0),
+         OG073 = coalesce(OG073,0))
+#filter out useless values in month/wk/day/hr
+helper_2014 <- helper_2014 %>%
+  filter(OG070 %in% 0:31,
+         OG071 %in% 0:7,
+         OG072 %in% 0:1,
+         OG073 %in% 1:24)
+
+#calculate helping hours (assume that one month has 4 weeks and 30 days)
+helper_2014 <- helper_2014 %>%
+  mutate(helper_time = OG070*OG073+OG071*4*OG073+OG072*30*OG073)
+```
+
+
