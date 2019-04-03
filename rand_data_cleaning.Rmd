@@ -31,7 +31,7 @@ rand <- read_csv("~/Desktop/data/randhrs.csv")
 R12... or S12... indicates 12 wave, which is from 2014. 
 ```{r}
 id <- rand %>%
-  select(HHIDPN, HHID, PN, RAHHIDPN,
+  select(HHIDPN, HHID, PN,
           R12CESD, S12CESD, #CESD Score, binary level yes or no
          
           R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
@@ -83,7 +83,12 @@ id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
   filter(dyad == "Y")
 
 #write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
-rand_dyad <-read_csv("rand_dyad.csv") 
+```
+
+#Read dyad data seperately
+```{r}
+id_valid_dyad   <-read_csv("rand_dyad.csv") 
+
 ```
 
 
@@ -118,6 +123,7 @@ helper_id <- helper%>%
   mutate(helper="Y")
 ```
 
+
 ```{r eval=FALSE, include=FALSE}
 #plot helper hours
 ggplot(data=helper_2014, aes(x=helper_time))+geom_histogram()
@@ -134,38 +140,68 @@ test <- helper%>%
 # Create sub-dataset by helper status
 ```{r}
 #Join helper with spouse in RAND, indicating spouses who are helpers
-spouse_helper <- left_join(id_valid_dyad, helper_id, by= c("RAHHIDPN"= "respondent_id"))%>%
-  filter(helper=="Y")%>%
-  select(RAHHIDPN)%>%
-  mutate(helper_status = "spouse helper")
-
-
-#Join helper with respondent in RAND, indicating respondents who are helpers
 class(id_valid_dyad$HHIDPN)
 class(helper_id$respondent_id)
 id_valid_dyad$HHIDPN<-as.character(id_valid_dyad$HHIDPN)
 
-respondent_helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
+helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
-  select(HHIDPN, spouse_id)%>%
-  mutate(helper_status = "respondent helper")
-
-
-#both_helper <- setdiff(spouse_helper$RAHHIDPN,respondent_helper$HHIDPN)%>%
-#  as.data.frame(col.names = names(respondent_helper))
-#Helpers who are both respondent and helpers
-both_helper <-left_join(respondent_helper,spouse_helper, by = c("spouse_id" = "RAHHIDPN"))%>%
-  mutate(helper_status = "both helper")%>%
-  select(RAHHIDPN, helper_status)
+  mutate(helper_status = "helper")
 
 ```
 
+# Type 1 Both helper
+```{r}
+#check couple
+dyad_helper_both<-helper%>%
+  group_by(HHID)%>%
+  mutate(N=n())%>%
+  filter(N==2)
+```
+
+
+
+# Type 2 Women helper
+```{r}
+helper_f <- helper %>%
+  filter(sex=="2.Female")
+
+helper_f_id<-helper_f%>%
+  select(spouse_id)%>%
+  as.data.frame()
+
+helper_f_spouse <- left_join(helper_f_id, id_valid_dyad , by= c("spouse_id" = "HHIDPN"))%>%
+  mutate(helper_status = "not helper", helper_time = 0)
+
+names(helper_f_spouse)[1]<- "HHIDPN"
+helper_f<- helper_f%>%
+  select(-spouse_id, -helper)
+
+dyad_helper_f <- rbind(helper_f, helper_f_spouse)
+write.csv(dyad_helper_f, file="dyad_helper_f.csv", row.names = F)
+
+```
 
 
 ```{r}
-dyad_type1_both_helper <- inner_join(id_valid_dyad, both_helper, by = "RAHHIDPN")
-write.csv(dyad_type1_both_helper, file="dyad_type1_both_helper.csv", row.names = F)
+helper_m <- helper %>%
+  filter(sex=="1.Male")
 
+helper_m_id<-helper_m%>%
+  select(spouse_id)%>%
+  as.data.frame()
+
+helper_m_spouse <- left_join(helper_m_id, id_valid_dyad , by= c("spouse_id" = "HHIDPN"))%>%
+  mutate(helper_status = "not helper", helper_time = 0)
+
+names(helper_m_spouse)[1]<- "HHIDPN"
+helper_m<- helper_m%>%
+  select(-spouse_id, -helper)
+
+dyad_helper_m <- rbind(helper_m, helper_m_spouse)
+write.csv(dyad_helper_m, file="dyad_helper_m.csv", row.names = F)
 
 ```
+
+
 
