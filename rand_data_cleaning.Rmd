@@ -14,6 +14,8 @@ library(data.table)
 library(ggplot2)
 library(mosaic)
 library(skimr)
+#functions
+'%ni%' <- Negate('%in%')
 ```
 
 ```{r}
@@ -80,17 +82,40 @@ id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
 ```
 
 # Helper READ IN
-```{r}
-helper_16 <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
-  mutate()
+```{r eval=FALSE, include=FALSE}
+#year: 2016
 
+helper <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+  filter(!is.na(OPN_SP))%>%
+  filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))%>%
+  filter(OG069 == "2")
+
+helper_id <- helper%>%
+  select(respondent_id, spouse_id, OG069, OG070) %>% #OG069:Relation. OG070:Frequency help
+  mutate(helper="Y")
 ```
 
-
 ```{r}
-dyad_helper <- left_join(id_valid_dyad, helper_16, by= "RAHHIDPN")
-```
+#Join helper with spouse in RAND, indicating spouses who are helpers
+spouse_helper <- left_join(id_valid_dyad, helper_id, by= c("RAHHIDPN"= "respondent_id"))%>%
+  filter(helper=="Y")%>%
+  select(RAHHIDPN)%>%
+  mutate(helper_status = "spouse helper")
 
+
+#Join helper with respondent in RAND, indicating respondents who are helpers
+class(id_valid_dyad$HHIDPN)
+class(helper_id$respondent_id)
+id_valid_dyad$HHIDPN<-as.character(id_valid_dyad$HHIDPN)
+
+respondent_helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
+  filter(helper=="Y")%>%
+  select(HHIDPN)%>%
+  mutate(helper_status = "respondent helper")
+
+both_helper <- setdiff(spouse_helper,respondent_helper, by=)
+```
 
 
 
