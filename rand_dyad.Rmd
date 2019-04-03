@@ -12,7 +12,7 @@ library(readr)
 ```
 
 ```{r}
-rand_dyad <- read_csv("rand_dyad.csv")
+dyad <- read_csv("dyad_type1_both_helper.csv")
 ```
 # Three dyads
 

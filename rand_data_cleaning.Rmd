@@ -22,6 +22,13 @@ library(skimr)
 rand <- read_csv("~/Desktop/data/randhrs.csv")
 
 #glimpse(rand)
+favstats(rand$R12OOPMD)
+table(rand$RAGENDER, useNA="a")
+
+#population size
+rand$H12HHIDC
+
+
 ```
 
 
@@ -32,14 +39,16 @@ id <- rand %>%
   select(HHIDPN, HHID, PN, RAHHIDPN,
           R12CESD, S12CESD, #CESD Score, binary level yes or no
          
-          R12ADLA, S12ADLA #ADL Summary: sum ADLs where Respondent reports any difficulty
+          R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
+          R12OOPMD, S12OOPMD,  #Total expenditure
+         RAGENDER
         )
 
 skim(id)
 #rename
 setnames(id ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD"))
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "S_expense", "R_expense", "sex"))
 
 #filter out non-dyad individuals
 id_valid <- id%>%
@@ -82,21 +91,13 @@ id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
 ```
 
 # Helper READ IN
-```{r eval=FALSE, include=FALSE}
+```{r}
 #year: 2016
-
 helper <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
   filter(!is.na(OPN_SP))%>%
   filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
   mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))%>%
   filter(OG069 == "2")
-
-helper_id <- helper%>%
-  select(respondent_id, spouse_id, OG069, OG070) %>% #OG069:Relation. OG070:Frequency help
-  mutate(helper="Y")
-```
-
-```{r}
 
 #convert NA value in month/wk/day to 0 
 helper<- helper %>%
@@ -105,22 +106,27 @@ helper<- helper %>%
          OG072 = coalesce(OG072,0),
          OG073 = coalesce(OG073,0))
 #filter out useless values in month/wk/day/hr
-helper_2014 <- helper %>%
+helper <- helper %>%
   filter(OG070 %in% 0:31,
          OG071 %in% 0:7,
          OG072 %in% 0:1,
          OG073 %in% 1:24)
 
 #calculate helping hours (assume that one month has 4 weeks and 30 days)
-helper_2014 <- helper_2014 %>%
+helper <-helper%>%
   mutate(helper_time = OG070*OG073+OG071*4*OG073+OG072*30*OG073)
 
+helper_id <- helper%>%
+  select(respondent_id, spouse_id, helper_time) %>% 
+  mutate(helper="Y")
+```
+
+```{r eval=FALSE, include=FALSE}
 #plot helper hours
 ggplot(data=helper_2014, aes(x=helper_time))+geom_histogram()
 count(helper_2014$helper_time==1)
 
 table(helper$OG073)
-
 
 test <- helper%>%
   group_by(OG070, OG073)%>%
@@ -160,5 +166,8 @@ both_helper <-inner_join(spouse_helper, respondent_helper, by = c("RAHHIDPN"= "H
 
 ```{r}
 dyad_type1_both_helper <- inner_join(id_valid_dyad, both_helper, by = "RAHHIDPN")
+write.csv(dyad_type1_both_helper, file="dyad_type1_both_helper.csv", row.names = F)
+
+
 ```
 
