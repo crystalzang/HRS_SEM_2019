@@ -96,6 +96,7 @@ helper_id <- helper%>%
   mutate(helper="Y")
 ```
 
+# Create sub-dataset by helper status
 ```{r}
 #Join helper with spouse in RAND, indicating spouses who are helpers
 spouse_helper <- left_join(id_valid_dyad, helper_id, by= c("RAHHIDPN"= "respondent_id"))%>%
@@ -114,10 +115,18 @@ respondent_helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respon
   select(HHIDPN)%>%
   mutate(helper_status = "respondent helper")
 
-both_helper <- setdiff(spouse_helper,respondent_helper, by=)
+
+#both_helper <- setdiff(spouse_helper$RAHHIDPN,respondent_helper$HHIDPN)%>%
+#  as.data.frame(col.names = names(respondent_helper))
+#Helpers who are both respondent and helpers
+both_helper <-inner_join(spouse_helper, respondent_helper, by = c("RAHHIDPN"= "HHIDPN"))%>%
+  mutate(helper_status = "both helper")%>%
+  select(RAHHIDPN, helper_status)
+
 ```
 
 
-
-
+```{r}
+dyad_type1_both_helper <- inner_join(id_valid_dyad, both_helper, by = "RAHHIDPN")
+```
 
