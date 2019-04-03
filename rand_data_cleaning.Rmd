@@ -22,13 +22,8 @@ library(skimr)
 rand <- read_csv("~/Desktop/data/randhrs.csv")
 
 #glimpse(rand)
-favstats(rand$R12OOPMD)
-table(rand$RAGENDER, useNA="a")
-
-#population size
-rand$H12HHIDC
-
-
+#sample <- rand[sample(1:nrow(rand), 10,
+#   replace=FALSE),]
 ```
 
 
@@ -88,7 +83,9 @@ id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
   filter(dyad == "Y")
 
 #write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
+rand_dyad <-read_csv("rand_dyad.csv") 
 ```
+
 
 # Helper READ IN
 ```{r}
@@ -150,18 +147,19 @@ id_valid_dyad$HHIDPN<-as.character(id_valid_dyad$HHIDPN)
 
 respondent_helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
-  select(HHIDPN)%>%
+  select(HHIDPN, spouse_id)%>%
   mutate(helper_status = "respondent helper")
 
 
 #both_helper <- setdiff(spouse_helper$RAHHIDPN,respondent_helper$HHIDPN)%>%
 #  as.data.frame(col.names = names(respondent_helper))
 #Helpers who are both respondent and helpers
-both_helper <-inner_join(spouse_helper, respondent_helper, by = c("RAHHIDPN"= "HHIDPN"))%>%
+both_helper <-left_join(respondent_helper,spouse_helper, by = c("spouse_id" = "RAHHIDPN"))%>%
   mutate(helper_status = "both helper")%>%
   select(RAHHIDPN, helper_status)
 
 ```
+
 
 
 ```{r}
