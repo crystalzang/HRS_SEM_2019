@@ -130,11 +130,35 @@ helper_2014 <- helper_2014 %>%
 
 #calculate helping hours (assume that one month has 4 weeks and 30 days)
 helper_2014 <- helper_2014 %>%
-  mutate(helper_time = OG070*OG073+OG071*4*OG073+OG072*30*OG073)
+  mutate(helper_hour = OG070*OG073+OG071*4*OG073+OG072*30*OG073)
 
-#plot helper hours
-ggplot(data=helper_2014, aes(x=helper_time))+geom_histogram()
-count(helper_2014$helper_time==1)
 ```
 
+
+```{r}
+dyad_helper_f <- read_csv("dyad_helper_f.csv")
+dyad_female_helper <- dyad_helper_f %>%
+  filter(sex=="2.Female") %>%
+  mutate(expenditure=S_expense+R_expense)
+
+#basic model
+model_f <- '
+
+            S_CESD~S_ADL+helper_time
+            S_CESD~expenditure
+            helper_time~S_ADL
+            expenditure~S_ADL
+
+            R_CESD~R_ADL+helper_time
+            R_CESD~expenditure
+            helper_time~R_ADL
+            expenditure~R_ADL    
+      '
+#estimator = MLM?
+fit_f <- sem(model_f, data = dyad_female_helper)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+varTable(fit_f)
+library(semPlot)
+semPaths(fit_f)
+```
 

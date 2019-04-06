@@ -94,7 +94,7 @@ id_valid_dyad   <-read_csv("rand_dyad.csv")
 
 # Helper READ IN
 ```{r}
-#year: 2016
+#year: 2014
 helper <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
   filter(!is.na(OPN_SP))%>%
   filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
@@ -116,7 +116,7 @@ helper <- helper %>%
 
 #calculate helping hours (assume that one month has 4 weeks and 30 days)
 helper <-helper%>%
-  mutate(helper_time = OG070*OG073+OG071*4*OG073+OG072*30*OG073)
+  mutate(helper_time= OG070*OG073+OG071*4*OG073+OG072*30*OG073)
 
 helper_id <- helper%>%
   select(respondent_id, spouse_id, helper_time) %>% 
