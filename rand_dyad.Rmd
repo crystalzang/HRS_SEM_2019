@@ -12,7 +12,11 @@ library(readr)
 ```
 
 ```{r}
-dyad <- read_csv("dyad_type1_both_helper.csv")
+dyad_helper_f <- read_csv("dyad_helper_f.csv")
+table(dyad_helper_f$sex)
+
+table(dyad$R_ADL)
+favstats(dyad$S_expense)
 ```
 # Three dyads
 
