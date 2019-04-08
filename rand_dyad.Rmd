@@ -13,7 +13,11 @@ library(readr)
 
 ```{r}
 dyad_helper_f <- read_csv("dyad_helper_f.csv")
-table(dyad_helper_f$sex)
+  table(dyad_helper_f$sex)
+
+
+dyad_helper_m <- read_csv("dyad_helper_m.csv")
+table(dyad_helper_m$sex)
 
 table(dyad$R_ADL)
 favstats(dyad$S_expense)

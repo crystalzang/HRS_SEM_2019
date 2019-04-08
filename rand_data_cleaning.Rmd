@@ -44,7 +44,7 @@ nrow(rand_2014)
 
 
 ```{r}
-rand_2014   <-read_csv("data/rand_2014.csv") 
+rand_2014   <- read_csv("~/Desktop/data/rand/rand_2014.csv")
 
 id <- rand_2014 %>%
   select(HHIDPN, HHID, PN, 
@@ -142,13 +142,18 @@ tally(id_group$N)
 
 
 # Helper READ IN
+About `1-nrow(helper) /nrow(H14G_HP)` = 50.5% helpers were spouse.  We excluded 49.5% of data.
 ```{r}
 #year: 2014
-helper <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+H14G_HP <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
   filter(!is.na(OPN_SP))%>%
   filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
-  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))%>%
+  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))
+
+helper <- H14G_HP%>%
   filter(OG069 == "2")
+
+1-nrow(helper) /nrow(H14G_HP)
 
 #convert NA value in month/wk/day to 0 
 helper<- helper %>%
@@ -156,6 +161,7 @@ helper<- helper %>%
          OG071 = coalesce(OG071,0),
          OG072 = coalesce(OG072,0),
          OG073 = coalesce(OG073,0))
+
 #filter out useless values in month/wk/day/hr
 helper <- helper %>%
   filter(OG070 %in% 0:31,
