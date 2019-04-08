@@ -18,54 +18,107 @@ library(skimr)
 '%ni%' <- Negate('%in%')
 ```
 
-```{r}
-rand <- read_csv("~/Desktop/data/randhrs.csv")
 
-#glimpse(rand)
-#sample <- rand[sample(1:nrow(rand), 10,
-#   replace=FALSE),]
+```{r}
+#rand <- read_csv("~/Desktop/data/randhrs.csv")
 ```
 
 
-#Extract variables and Data Exploration
-R12... or S12... indicates 12 wave, which is from 2014. 
+Wave 12, which is from 2014. 
+
+# Step 1: Rand data from Wave 12, which is 2014. n = 4372 
+`nrow(rand_2014)`
 ```{r}
-id <- rand %>%
-  select(HHIDPN, HHID, PN,
+#Cohort
+table(rand$HACOHORT) 
+#Wave 14
+table(rand$R12PENINC)
+table(rand$R12PENINC,rand$HACOHORT)
+
+rand_2014<-rand%>%
+  filter(R12PENINC == "1.Yes")
+
+#write.csv(rand_2014, file="data/rand_2014.csv", row.names = F)
+nrow(rand_2014)
+```
+
+
+```{r}
+rand_2014   <-read_csv("data/rand_2014.csv") 
+
+id <- rand_2014 %>%
+  select(HHIDPN, HHID, PN, 
+         HACOHORT,  #cohort
           R12CESD, S12CESD, #CESD Score, binary level yes or no
          
           R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
           R12OOPMD, S12OOPMD,  #Total expenditure
-         RAGENDER
+         RAGENDER  #gender
         )
 
-skim(id)
+#skim(id)
 #rename
 setnames(id ,
          old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "S_expense", "R_expense", "sex"))
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex"))
+```
 
-#filter out non-dyad individuals
-id_valid <- id%>%
-  filter(!is.na(R_ADL), !is.na(S_ADL), !is.na(R_CESD), !is.na(S_CESD))
 
+# Step 2: Missing variables n = 2025.
+From step 1 (n=`nrow(rand_2014)` =4372), 
+
+We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 6.13% data for missing variables for respondents.
+
+We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 51.01% data for missing variables for spouses.
+
+We excluded `1-nrow(rand_2014_valid)/nrow(rand_2014))` 53.68% data for missing variables for both respondents and spouses, which left us 2025 observations.
+```{r}
+table(rand_2014$S12AGEY_E)
+table(rand_2014$R12ADLA,useNA = "a")
+table(rand_2014$S12ADLA, useNA = "a")
+
+table(rand_2014$R12CESD, useNA="a")
+table(rand_2014$S12CESD, useNA="a")
+
+favstats(rand_2014$R12OOPMD)
+favstats(rand_2014$S12OOPMD)
+
+
+rand_2014_R_valid <- id%>%
+  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense))
+1-nrow(rand_2014_R_valid)/nrow(rand_2014)
+
+rand_2014_S_valid <- id%>%
+  filter(!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
+1-nrow(rand_2014_S_valid)/nrow(rand_2014)
+
+rand_2014_valid <- id%>%
+  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense),!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
+1-nrow(rand_2014_valid)/nrow(rand_2014)
+
+```
+
+
+
+
+```{r}
 #There shouldn't be any missing R_ADL
-tally(id_valid$S_ADL)
+tally(rand_2014$S_ADL)
 
 #Missing S_ADL meaning that those helper don't have ADL
-tally(id_valid$S_ADL)
+tally(rand_2014$S_ADL)
 
 #There shouldn't be any missing R_CESD, we want all informaiton
-tally(id_valid$R_CESD)
+tally(rand_2014$R_CESD)
 
 #There shouldn't be any missing S_CESD, we want all informaiton
-tally(id_valid$S_CESD)
+tally(rand_2014$S_CESD)
 ```
 
 #Couple Investigation
 ```{r}
 #check couple
-id_group<-id_valid%>%
+id_group<-rand_2014_R_valid%>%
   group_by(HHID)%>%
   summarize(N=n())
 
@@ -73,21 +126,17 @@ id_group<-id_valid%>%
 tally(id_group$N)
 
 #Valid dyad HHID 
-id_valid_dyad_id <- id_group%>%
-  filter(N==2)%>%
-  select(HHID)%>%
-  mutate(dyad = "Y")
+#id_valid_dyad_id <- id_group%>%
+#  filter(N==2)%>%
+#  select(HHID)%>%
+#  mutate(dyad = "Y")
 
 #Cleaned dyad data
-id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
-  filter(dyad == "Y")
+#id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
+#  filter(dyad == "Y")
 
 #write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
-```
-
-#Read dyad data seperately
-```{r}
-id_valid_dyad   <-read_csv("rand_dyad.csv") 
+#id_valid_dyad   <-read_csv("rand_dyad.csv") 
 
 ```
 
@@ -140,11 +189,11 @@ test <- helper%>%
 # Create sub-dataset by helper status
 ```{r}
 #Join helper with spouse in RAND, indicating spouses who are helpers
-class(id_valid_dyad$HHIDPN)
+class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-id_valid_dyad$HHIDPN<-as.character(id_valid_dyad$HHIDPN)
+rand_2014_R_valid $HHIDPN<-as.character(rand_2014_R_valid $HHIDPN)
 
-helper <- left_join(id_valid_dyad, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
+helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
   mutate(helper_status = "helper")
 
@@ -163,6 +212,8 @@ dyad_helper_both<-helper%>%
 
 # Type 2 Women helper
 ```{r}
+table(helper$sex)
+
 helper_f <- helper %>%
   filter(sex=="2.Female")
 
@@ -178,6 +229,7 @@ helper_f<- helper_f%>%
   select(-spouse_id, -helper)
 
 dyad_helper_f <- rbind(helper_f, helper_f_spouse)
+
 write.csv(dyad_helper_f, file="dyad_helper_f.csv", row.names = F)
 
 ```
