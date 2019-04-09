@@ -70,12 +70,6 @@ semPaths(fit_1,rotation=2)
 ```
 
 #transformation
-```{r}
-log_S_CESD = log10(dyad_female_helper$S_CESD)
-ggplot(data=dyad_female_helper,aes(x=log_S_CESD))+geom_histogram()
-log_S_CESD = log10(dyad_female_helper$S_CESD)
-ggplot(data=dyad_female_helper,aes(x=log_S_CESD))+geom_histogram()
-```
 
 ```{r}
 scale_exp <- scale(dyad_female_helper$expenditure, center = TRUE, scale = TRUE)
@@ -112,10 +106,7 @@ library(semPlot)
 semPaths(fit_f)
 ```
 
-```{r}
-ggplot(data=dyad_female_helper,aes(x=expenditure))+geom_histogram()
 
-```
 
 
 
