@@ -20,14 +20,19 @@ library(skimr)
 
 
 ```{r}
-#rand <- read_csv("~/Desktop/data/randhrs.csv")
+rand <- read_csv("~/Desktop/data/randhrs.csv")
 ```
 
 
 Wave 12, which is from 2014. 
 
-# Step 1: Rand data from Wave 12, which is 2014. n = 4372 
-`nrow(rand_2014)`
+# Step 1: Rand data that contains study participants who answered ADL, CESD
+
+We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 6.13% data for missing variables for respondents.
+
+We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 51.01% data for missing variables for spouses.
+
+We excluded `1-nrow(rand_2014_valid)/nrow(rand_2014))` 53.68% data for missing variables for both respondents and spouses, which left us 2025 observations.
 ```{r}
 #Cohort
 table(rand$HACOHORT) 
@@ -35,18 +40,9 @@ table(rand$HACOHORT)
 table(rand$R12PENINC)
 table(rand$R12PENINC,rand$HACOHORT)
 
-rand_2014<-rand%>%
-  filter(R12PENINC == "1.Yes")
+#rand_2014   <- read_csv("~/Desktop/data/rand/rand_2014.csv")
 
-#write.csv(rand_2014, file="data/rand_2014.csv", row.names = F)
-nrow(rand_2014)
-```
-
-
-```{r}
-rand_2014   <- read_csv("~/Desktop/data/rand/rand_2014.csv")
-
-id <- rand_2014 %>%
+rand_2014 <- rand %>%
   select(HHIDPN, HHID, PN, 
          HACOHORT,  #cohort
           R12CESD, S12CESD, #CESD Score, binary level yes or no
@@ -58,21 +54,10 @@ id <- rand_2014 %>%
 
 #skim(id)
 #rename
-setnames(id ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex"))
-```
+setnames(rand_2014 ,
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort"))
 
-
-# Step 2: Missing variables n = 2025.
-From step 1 (n=`nrow(rand_2014)` =4372), 
-
-We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 6.13% data for missing variables for respondents.
-
-We excluded `1-nrow(rand_2014_R_valid)/nrow(rand_2014)` 51.01% data for missing variables for spouses.
-
-We excluded `1-nrow(rand_2014_valid)/nrow(rand_2014))` 53.68% data for missing variables for both respondents and spouses, which left us 2025 observations.
-```{r}
 table(rand_2014$S12AGEY_E)
 table(rand_2014$R12ADLA,useNA = "a")
 table(rand_2014$S12ADLA, useNA = "a")
@@ -84,17 +69,17 @@ favstats(rand_2014$R12OOPMD)
 favstats(rand_2014$S12OOPMD)
 
 
-rand_2014_R_valid <- id%>%
+rand_2014_R_valid <- rand_2014%>%
   filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense))
-1-nrow(rand_2014_R_valid)/nrow(rand_2014)
+nrow(rand_2014_R_valid)
 
-rand_2014_S_valid <- id%>%
-  filter(!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
-1-nrow(rand_2014_S_valid)/nrow(rand_2014)
+# rand_2014_S_valid <- rand_2014%>%
+#   filter(!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
+# 1-nrow(rand_2014_S_valid)/nrow(rand_2014)
 
-rand_2014_valid <- id%>%
-  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense),!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
-1-nrow(rand_2014_valid)/nrow(rand_2014)
+#rand_2014_valid <- rand_2014%>%
+#  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense),!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
+#1-nrow(rand_2014_valid)/nrow(rand_2014)
 
 ```
 
@@ -143,17 +128,31 @@ tally(id_group$N)
 
 # Helper READ IN
 About `1-nrow(helper) /nrow(H14G_HP)` = 50.5% helpers were spouse.  We excluded 49.5% of data.
+After filtering out helpers who had invalid helper hour, left us 1243 unique helper in data. 
 ```{r}
 #year: 2014
-H14G_HP <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)%>%
+H14G_HP <- read_sav("/Users/crystalzang/Desktop/data/helper/H14G_HP.sav", encoding = NULL, user_na = FALSE)
+
+###vARIBALE
+table(H14G_HP$OPN_SP)
+class(H14G_HP$HHID)
+H14G_HP$HHID<- as.numeric(H14G_HP$HHID)
+H14G_HP$PN<- as.numeric(H14G_HP$PN)
+H14G_HP$OPN_SP<- as.numeric(H14G_HP$OPN_SP)
+
+table(H14G_HP$PN)  #helper PN
+table(rand_2014_R_valid$PN)  
+
+H14G_HP <- H14G_HP%>%
   filter(!is.na(OPN_SP))%>%
   filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
-  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))
+#  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))
+  mutate(respondent_id= 1000*HHID + PN, spouse_id=1000*HHID + OPN_SP)
+
+#summary(H14G_HP$respondent_id)
 
 helper <- H14G_HP%>%
   filter(OG069 == "2")
-
-1-nrow(helper) /nrow(H14G_HP)
 
 #convert NA value in month/wk/day to 0 
 helper<- helper %>%
@@ -172,6 +171,9 @@ helper <- helper %>%
 #calculate helping hours (assume that one month has 4 weeks and 30 days)
 helper <-helper%>%
   mutate(helper_time= OG070*OG073+OG071*4*OG073+OG072*30*OG073)
+
+#helper_unique <- helper[!duplicated(helper$spouse_id), ]
+#nrow(helper_unique)
 
 helper_id <- helper%>%
   select(respondent_id, spouse_id, helper_time) %>% 
@@ -192,17 +194,21 @@ test <- helper%>%
 ```
 
 
-# Create sub-dataset by helper status
+# Join Rand with helper
 ```{r}
 #Join helper with spouse in RAND, indicating spouses who are helpers
 class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-rand_2014_R_valid $HHIDPN<-as.character(rand_2014_R_valid $HHIDPN)
+#rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
+helper_id$respondent_id<- as.character(helper_id$respondent_id)
 
 helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
   mutate(helper_status = "helper")
 
+id_group<-helper%>%
+  group_by(HHID)%>%
+  summarize(N=n())
 ```
 
 # Type 1 Both helper
@@ -220,14 +226,20 @@ dyad_helper_both<-helper%>%
 ```{r}
 table(helper$sex)
 
+class(helper$spouse_id)
+helper$spouse_id<-as.character(helper$spouse_id)
+
 helper_f <- helper %>%
   filter(sex=="2.Female")
+nrow(helper_f)
+
 
 helper_f_id<-helper_f%>%
   select(spouse_id)%>%
   as.data.frame()
 
-helper_f_spouse <- left_join(helper_f_id, id_valid_dyad , by= c("spouse_id" = "HHIDPN"))%>%
+
+helper_f_spouse <- left_join(helper_f_id, rand_2014_R_valid, by= c("spouse_id" = "HHIDPN"))%>%
   mutate(helper_status = "not helper", helper_time = 0)
 
 names(helper_f_spouse)[1]<- "HHIDPN"
@@ -236,8 +248,27 @@ helper_f<- helper_f%>%
 
 dyad_helper_f <- rbind(helper_f, helper_f_spouse)
 
-write.csv(dyad_helper_f, file="dyad_helper_f.csv", row.names = F)
+#check couple
+id_group<-dyad_helper_f%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+#Valid dyad HHID 
+id_valid_dyad_id <- id_group%>%
+  filter(N==2)%>%
+  select(HHID)%>%
+  mutate(dyad = "Y")
+#Cleaned dyad data
+dyad_helper_f_final <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+  filter(dyad == "Y")
 
+#id_group<-dyad_helper_f_final%>%
+ # group_by(HHID)%>%
+ # summarize(N=n())
+
+#table(dyad_helper_f_final$sex)
+nrow(dyad_helper_f_final)
+
+write.csv(dyad_helper_f_final, file="dyad_helper_f.csv", row.names = F)
 ```
 
 
@@ -249,7 +280,7 @@ helper_m_id<-helper_m%>%
   select(spouse_id)%>%
   as.data.frame()
 
-helper_m_spouse <- left_join(helper_m_id, id_valid_dyad , by= c("spouse_id" = "HHIDPN"))%>%
+helper_m_spouse <- left_join(helper_m_id, rand_2014_R_valid , by= c("spouse_id" = "HHIDPN"))%>%
   mutate(helper_status = "not helper", helper_time = 0)
 
 names(helper_m_spouse)[1]<- "HHIDPN"
@@ -257,7 +288,33 @@ helper_m<- helper_m%>%
   select(-spouse_id, -helper)
 
 dyad_helper_m <- rbind(helper_m, helper_m_spouse)
-write.csv(dyad_helper_m, file="dyad_helper_m.csv", row.names = F)
+
+
+#check couple
+id_group<-dyad_helper_m%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+
+#Valid dyad HHID 
+id_valid_dyad_id <- id_group%>%
+  filter(N==2)%>%
+  select(HHID)%>%
+  mutate(dyad = "Y")
+
+#Cleaned dyad data
+dyad_helper_m_final <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+  filter(dyad == "Y")
+
+#id_group<-dyad_helper_f_final%>%
+ # group_by(HHID)%>%
+ # summarize(N=n())
+
+#table(dyad_helper_f_final$sex)
+nrow(dyad_helper_m_final)
+
+
+
+write.csv(dyad_helper_m_final, file="dyad_helper_m.csv", row.names = F)
 
 ```
 
