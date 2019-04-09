@@ -46,7 +46,7 @@ rand_2014 <- rand %>%
   select(HHIDPN, HHID, PN, 
          HACOHORT,  #cohort
           R12CESD, S12CESD, #CESD Score, binary level yes or no
-         
+         S12AGEY_E,  #Age
           R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
           R12OOPMD, S12OOPMD,  #Total expenditure
          RAGENDER  #gender
@@ -55,18 +55,9 @@ rand_2014 <- rand %>%
 #skim(id)
 #rename
 setnames(rand_2014 ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort"))
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age"))
 
-table(rand_2014$S12AGEY_E)
-table(rand_2014$R12ADLA,useNA = "a")
-table(rand_2014$S12ADLA, useNA = "a")
-
-table(rand_2014$R12CESD, useNA="a")
-table(rand_2014$S12CESD, useNA="a")
-
-favstats(rand_2014$R12OOPMD)
-favstats(rand_2014$S12OOPMD)
 
 
 rand_2014_R_valid <- rand_2014%>%
@@ -80,48 +71,6 @@ nrow(rand_2014_R_valid)
 #rand_2014_valid <- rand_2014%>%
 #  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense),!is.na(S_ADL), !is.na(S_CESD), !is.na(S_expense))
 #1-nrow(rand_2014_valid)/nrow(rand_2014)
-
-```
-
-
-
-
-```{r}
-#There shouldn't be any missing R_ADL
-tally(rand_2014$S_ADL)
-
-#Missing S_ADL meaning that those helper don't have ADL
-tally(rand_2014$S_ADL)
-
-#There shouldn't be any missing R_CESD, we want all informaiton
-tally(rand_2014$R_CESD)
-
-#There shouldn't be any missing S_CESD, we want all informaiton
-tally(rand_2014$S_CESD)
-```
-
-#Couple Investigation
-```{r}
-#check couple
-id_group<-rand_2014_R_valid%>%
-  group_by(HHID)%>%
-  summarize(N=n())
-
-#Only 2 is reasonable
-tally(id_group$N)
-
-#Valid dyad HHID 
-#id_valid_dyad_id <- id_group%>%
-#  filter(N==2)%>%
-#  select(HHID)%>%
-#  mutate(dyad = "Y")
-
-#Cleaned dyad data
-#id_valid_dyad <- left_join(id_valid, id_valid_dyad_id, by="HHID")%>%
-#  filter(dyad == "Y")
-
-#write.csv(id_valid_dyad, file="rand_dyad.csv", row.names = F)
-#id_valid_dyad   <-read_csv("rand_dyad.csv") 
 
 ```
 
@@ -249,26 +198,38 @@ helper_f<- helper_f%>%
 dyad_helper_f <- rbind(helper_f, helper_f_spouse)
 
 #check couple
-id_group<-dyad_helper_f%>%
-  group_by(HHID)%>%
+ id_group<-dyad_helper_f%>%
+   group_by(HHID)%>%
   summarize(N=n())
+
 #Valid dyad HHID 
 id_valid_dyad_id <- id_group%>%
   filter(N==2)%>%
   select(HHID)%>%
   mutate(dyad = "Y")
-#Cleaned dyad data
-dyad_helper_f_final <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+
+#First join: identify people who are in dyad
+dyad_helper_f_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
   filter(dyad == "Y")
+#Second join: get information about helper status
+dyad_helper_f_id <- dyad_helper_f%>%
+  select(HHIDPN, helper_status)
+dyad_helper_f_join2 <- left_join(dyad_helper_f_join1 , dyad_helper_f_id, by="HHIDPN")
+
+table(dyad_helper_f_join2$helper_status,useNA = "a")
+
+#Cleaned dyad data
+
+nrow(dyad_helper_f_join2)
 
 #id_group<-dyad_helper_f_final%>%
  # group_by(HHID)%>%
  # summarize(N=n())
 
 #table(dyad_helper_f_final$sex)
-nrow(dyad_helper_f_final)
+nrow(dyad_helper_f_join2)/2
 
-write.csv(dyad_helper_f_final, file="dyad_helper_f.csv", row.names = F)
+write.csv(dyad_helper_f_join2, file="dyad_helper_f.csv", row.names = F)
 ```
 
 
@@ -291,8 +252,8 @@ dyad_helper_m <- rbind(helper_m, helper_m_spouse)
 
 
 #check couple
-id_group<-dyad_helper_m%>%
-  group_by(HHID)%>%
+ id_group<-dyad_helper_m%>%
+   group_by(HHID)%>%
   summarize(N=n())
 
 #Valid dyad HHID 
@@ -301,22 +262,80 @@ id_valid_dyad_id <- id_group%>%
   select(HHID)%>%
   mutate(dyad = "Y")
 
-#Cleaned dyad data
-dyad_helper_m_final <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+#First join: identify people who are in dyad
+dyad_helper_m_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
   filter(dyad == "Y")
+#Second join: get information about helper status
+dyad_helper_m_id <- dyad_helper_m%>%
+  select(HHIDPN, helper_status)
+dyad_helper_m_join2 <- left_join(dyad_helper_m_join1 , dyad_helper_m_id, by="HHIDPN")
 
-#id_group<-dyad_helper_f_final%>%
- # group_by(HHID)%>%
- # summarize(N=n())
+table(dyad_helper_m_join2$helper_status,useNA = "a")
 
-#table(dyad_helper_f_final$sex)
-nrow(dyad_helper_m_final)
+#Cleaned dyad data
+nrow(dyad_helper_m_join2)
 
+nrow(dyad_helper_m_join2)/2
 
-
-write.csv(dyad_helper_m_final, file="dyad_helper_m.csv", row.names = F)
+write.csv(dyad_helper_m_join2, file="dyad_helper_m.csv", row.names = F)
 
 ```
 
+#Unique Participants
+```{r}
+id_m<-dyad_helper_m_join2%>%
+  select(HHIDPN) #Already unique
 
+id_f<-dyad_helper_f_join2%>%
+  select(HHIDPN)#Already unique
+
+#list of unique id
+id <- rbind(id_m, id_f)
+id_unique<-id[!duplicated(id$HHIDPN), ]
+id_ls <- id_unique$HHIDPN
+
+
+#dyad_all <- rbind(dyad_helper_m_join2, dyad_helper_f_join2)
+#In f but not in m 
+dyad_diff <- anti_join(dyad_helper_m_join2, dyad_helper_f_join2, by="HHIDPN")
+
+dyad_all<-rbind(dyad_helper_f_join2, dyad_diff)
+
+
+#Test
+test<-dyad_all%>%
+  group_by(HHID)%>%
+  summarize(N=n())
+table(dyad_all$helper_status,useNA = "a")
+```
+
+#Study participants characteristics
+```{r}
+#Age
+helper <- dyad_all%>%
+  filter(helper_status == "helper")
+respondents <- dyad_all%>%
+  filter(helper_status == "not helper")
+
+table(dyad_all$age)
+favstats(dyad_all$age)
+table(dyad_all$sex)
+
+table(helper$age)
+favstats(helper$age)
+table(respondents$age)
+favstats(respondents$age)
+
+table(rand_participants_id$S12AGEY_E)
+
+table(rand_2014$R12ADLA,useNA = "a")
+table(rand_2014$S12ADLA, useNA = "a")
+
+table(rand_2014$R12CESD, useNA="a")
+table(rand_2014$S12CESD, useNA="a")
+
+favstats(rand_2014$R12OOPMD)
+favstats(rand_2014$S12OOPMD)
+
+```
 
