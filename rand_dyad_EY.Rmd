@@ -69,3 +69,54 @@ library(semPlot)
 semPaths(fit_1,rotation=2)
 ```
 
+#transformation
+```{r}
+log_S_CESD = log10(dyad_female_helper$S_CESD)
+ggplot(data=dyad_female_helper,aes(x=log_S_CESD))+geom_histogram()
+log_S_CESD = log10(dyad_female_helper$S_CESD)
+ggplot(data=dyad_female_helper,aes(x=log_S_CESD))+geom_histogram()
+```
+
+```{r}
+scale_exp <- scale(dyad_female_helper$expenditure, center = TRUE, scale = TRUE)
+ggplot(data=dyad_female_helper,aes(x=scale_exp))+geom_histogram()
+```
+
+
+```{r}
+#why NA in standard error 
+#why mod indice is not working 
+#how to adjust estimator in the model: subscript out of bounds
+
+library(lavaan)
+dyad_helper_f <- read_csv("dyad_helper_f.csv")
+dyad_female_helper <- dyad_helper_f %>%
+  filter(sex=="2.Female") %>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+
+#basic model
+model_f <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL   
+      '
+#estimator = MLM?
+fit_f <- sem(model_f, data = dyad_female_helper)
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+```
+
+```{r}
+ggplot(data=dyad_female_helper,aes(x=expenditure))+geom_histogram()
+
+```
+
+
+
+
