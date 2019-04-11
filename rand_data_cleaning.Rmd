@@ -300,6 +300,7 @@ id_ls <- id_unique$HHIDPN
 dyad_diff <- anti_join(dyad_helper_m_join2, dyad_helper_f_join2, by="HHIDPN")
 
 dyad_all<-rbind(dyad_helper_f_join2, dyad_diff)
+write.csv(dyad_all, file="dyad_all.csv", row.names = F)
 
 
 #Test
@@ -326,16 +327,8 @@ favstats(helper$age)
 table(respondents$age)
 favstats(respondents$age)
 
-table(rand_participants_id$S12AGEY_E)
-
-table(rand_2014$R12ADLA,useNA = "a")
-table(rand_2014$S12ADLA, useNA = "a")
-
-table(rand_2014$R12CESD, useNA="a")
-table(rand_2014$S12CESD, useNA="a")
-
-favstats(rand_2014$R12OOPMD)
-favstats(rand_2014$S12OOPMD)
-
+table(respondents$R_ADL,useNA = "a")
+dyad_helper_f_resADL0 <- dyad_helper_f_final%>%
+  filter(R_ADL==0)
 ```
 

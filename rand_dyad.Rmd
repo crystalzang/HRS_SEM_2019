@@ -13,14 +13,16 @@ library(readr)
 
 ```{r}
 dyad_helper_f <- read_csv("dyad_helper_f.csv")
-  table(dyad_helper_f$sex)
-
-
 dyad_helper_m <- read_csv("dyad_helper_m.csv")
-table(dyad_helper_m$sex)
 
-table(dyad$R_ADL)
-favstats(dyad$S_expense)
+
+
+dyad_female_helper <- dyad_helper_f %>%
+  filter(sex=="2.Female") %>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 ```
 # Three dyads
 
