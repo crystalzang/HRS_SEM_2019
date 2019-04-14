@@ -148,8 +148,8 @@ test <- helper%>%
 #Join helper with spouse in RAND, indicating spouses who are helpers
 class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-#rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
-helper_id$respondent_id<- as.character(helper_id$respondent_id)
+rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
+#helper_id$respondent_id<- as.character(helper_id$respondent_id)
 
 helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
@@ -213,23 +213,24 @@ dyad_helper_f_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")
   filter(dyad == "Y")
 #Second join: get information about helper status
 dyad_helper_f_id <- dyad_helper_f%>%
-  select(HHIDPN, helper_status)
+  select(HHIDPN, helper_status, helper_time)
+
 dyad_helper_f_join2 <- left_join(dyad_helper_f_join1 , dyad_helper_f_id, by="HHIDPN")
 
 table(dyad_helper_f_join2$helper_status,useNA = "a")
 
 #Cleaned dyad data
 
-nrow(dyad_helper_f_join2)
+#nrow(dyad_helper_f_join2)
 
 #id_group<-dyad_helper_f_final%>%
  # group_by(HHID)%>%
  # summarize(N=n())
 
 #table(dyad_helper_f_final$sex)
-nrow(dyad_helper_f_join2)/2
+#nrow(dyad_helper_f_join2)/2
 
-write.csv(dyad_helper_f_join2, file="dyad_helper_f.csv", row.names = F)
+write.csv(dyad_helper_f_join2, file="~/Desktop/HRS_SEM_2019/data/dyad_helper_f.csv", row.names = F)
 ```
 
 
@@ -267,7 +268,8 @@ dyad_helper_m_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")
   filter(dyad == "Y")
 #Second join: get information about helper status
 dyad_helper_m_id <- dyad_helper_m%>%
-  select(HHIDPN, helper_status)
+  select(HHIDPN, helper_status, helper_time)
+
 dyad_helper_m_join2 <- left_join(dyad_helper_m_join1 , dyad_helper_m_id, by="HHIDPN")
 
 table(dyad_helper_m_join2$helper_status,useNA = "a")
@@ -277,7 +279,7 @@ nrow(dyad_helper_m_join2)
 
 nrow(dyad_helper_m_join2)/2
 
-write.csv(dyad_helper_m_join2, file="dyad_helper_m.csv", row.names = F)
+write.csv(dyad_helper_m_join2, file="~/Desktop/HRS_SEM_2019/data/dyad_helper_m.csv", row.names = F)
 
 ```
 
@@ -300,7 +302,7 @@ id_ls <- id_unique$HHIDPN
 dyad_diff <- anti_join(dyad_helper_m_join2, dyad_helper_f_join2, by="HHIDPN")
 
 dyad_all<-rbind(dyad_helper_f_join2, dyad_diff)
-write.csv(dyad_all, file="dyad_all.csv", row.names = F)
+write.csv(dyad_all, file="~/Desktop/HRS_SEM_2019/data/dyad_all.csv", row.names = F)
 
 
 #Test
@@ -330,5 +332,7 @@ favstats(respondents$age)
 table(respondents$R_ADL,useNA = "a")
 dyad_helper_f_resADL0 <- dyad_helper_f_final%>%
   filter(R_ADL==0)
+
+dyad_all
 ```
 
