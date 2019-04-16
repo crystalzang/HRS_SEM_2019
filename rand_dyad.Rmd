@@ -15,8 +15,6 @@ library(readr)
 dyad_helper_f <- read_csv("dyad_helper_f.csv")
 dyad_helper_m <- read_csv("dyad_helper_m.csv")
 
-
-
 dyad_female_helper <- dyad_helper_f %>%
   filter(sex=="2.Female") %>%
   filter(HHIDPN != 204936010) %>%
@@ -65,3 +63,34 @@ ggplot( data = id_valid_dyad, aes(x = R_CESD)) + geom_histogram(binwidth = 1) + 
 ggplot( data = id_valid_dyad, aes(x = S_CESD)) + geom_histogram(binwidth = 1) + labs(title = "CESD spouse") 
 
 ```
+
+
+```{r}
+#why NA in standard error 
+#why mod indice is not working 
+#how to adjust estimator in the model: subscript out of bounds
+
+library(lavaan)
+dyad_helper_f <- read_csv("dyad_helper_f.csv")
+dyad_female_helper <- dyad_helper_f %>%
+  filter(sex=="2.Female") %>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+
+#basic model
+model_f <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL   
+      '
+#estimator = MLM?
+fit_f <- sem(model_f, data = dyad_female_helper)
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+```
+

@@ -8,7 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
-
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
 ```
 
 ```{r}
@@ -91,11 +97,9 @@ library(lavaan)
 dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
 dyad_female_helper <- dyad_helper_f %>%
   filter(sex=="2.Female") %>%
-#  filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
   mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
-favstats(dyad_female_helper$scale_help)
 #basic model
 model_f <- '
             S_CESD ~ S_ADL + scale_help + scale_exp
@@ -115,7 +119,6 @@ semPaths(fit_f)
 dyad_helper_m <- read_csv("data/dyad_helper_m.csv")
 dyad_male_helper <- dyad_helper_m %>%
   filter(sex=="1.Male") %>%
-  filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
   mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
@@ -136,6 +139,9 @@ semPaths(fit_m)
 
 
 
+```{r}
+ggplot(aes(x=S_CESD),data=dyad_female_helper)+geom_histogram(bins = 8)
+```
 
 
 
