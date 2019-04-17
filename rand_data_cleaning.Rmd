@@ -55,19 +55,31 @@ rand_2014 <- rand %>%
          R12HSPNIT, S12HSPNIT, # Nights in hosp, prv 2 yrs
          R12NRSNIT, S12NRSNIT,  #Nights in nurs home, prv 2 yrs
          R12WORK, S12WORK, #working for pay
-          R12IEARN, S12IEARN,  #individual earning
+          R12IEARN, S12IEARN#individual earning
         )
 
 #skim(id)
 #rename
 setnames(rand_2014 ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E","S12SHLT", "R12SHLT" ),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", "S_self_health", "Rself_health"))
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E",
+               "R12SHLT", "S12SHLT", 
+               "R12HSPTIM", "S12HSPTIM",
+               "R12HSPNIT", "S12HSPNIT",
+               "R12WORK", "S12WORK",
+               "R12IEARN", "S12IEARN"),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", 
+                "R_self_health", "S_self_health",
+                "R_hostital_stay","S_hostital_stay",
+                "R_nights_hospital","S_nights_hospital",
+                "R_work_pay",  "S_work_pay",
+                "R_income_i", "S_income_i"))
 
 
 
 rand_2014_R_valid <- rand_2014%>%
-  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense))
+  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense), !is.na(R_self_health), !is.na(R_hostital_stay), !is.na(R_nights_hospital), !is.na(R_work_pay), !is.na(R_income_i))
+
+
 nrow(rand_2014_R_valid)
 
 # rand_2014_S_valid <- rand_2014%>%
@@ -154,8 +166,8 @@ test <- helper%>%
 #Join helper with spouse in RAND, indicating spouses who are helpers
 class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
-#helper_id$respondent_id<- as.character(helper_id$respondent_id)
+#rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
+helper_id$respondent_id<- as.character(helper_id$respondent_id)
 
 helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%

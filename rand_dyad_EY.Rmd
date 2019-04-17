@@ -8,7 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
-
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
 ```
 
 ```{r}
@@ -76,6 +82,11 @@ scale_exp <- scale(dyad_female_helper$expenditure, center = TRUE, scale = TRUE)
 ggplot(data=dyad_female_helper,aes(x=scale_exp))+geom_histogram()
 ```
 
+```{r}
+
+```
+
+
 
 ```{r}
 #why NA in standard error 
@@ -83,14 +94,12 @@ ggplot(data=dyad_female_helper,aes(x=scale_exp))+geom_histogram()
 #how to adjust estimator in the model: subscript out of bounds
 
 library(lavaan)
-dyad_helper_f <- read_csv("dyad_helper_f.csv")
+dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
 dyad_female_helper <- dyad_helper_f %>%
   filter(sex=="2.Female") %>%
-  filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
   mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
-
 #basic model
 model_f <- '
             S_CESD ~ S_ADL + scale_help + scale_exp
@@ -106,8 +115,52 @@ library(semPlot)
 semPaths(fit_f)
 ```
 
+```{r}
+dyad_helper_m <- read_csv("data/dyad_helper_m.csv")
+dyad_male_helper <- dyad_helper_m %>%
+  filter(sex=="1.Male") %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+
+#basic model
+model_m <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL   
+      '
+#estimator = MLM?
+fit_m <- sem(model_m, data = dyad_male_helper, estimator = "MLM")
+varTable(fit_m)
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+semPaths(fit_m)
+```
 
 
 
+```{r}
+ggplot(aes(x=S_CESD),data=dyad_female_helper)+geom_histogram(bins = 8)
+```
 
+```{r}
+dyad_all <- read_csv("data/dyad_all.csv")
+dyad_male_helper <- dyad_helper_m %>%
+  filter(helper_status=="helper") %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+
+#basic model
+model_all <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL   
+      '
+#estimator = MLM?
+fit_all <- sem(model_m, data = dyad_male_helper, estimator = "MLM")
+summary(fit_all,standardized = TRUE, fit.measures = TRUE)
+semPaths(fit_all)
+```
 
