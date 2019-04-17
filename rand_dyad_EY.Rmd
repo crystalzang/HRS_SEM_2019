@@ -143,5 +143,24 @@ semPaths(fit_m)
 ggplot(aes(x=S_CESD),data=dyad_female_helper)+geom_histogram(bins = 8)
 ```
 
+```{r}
+dyad_all <- read_csv("data/dyad_all.csv")
+dyad_male_helper <- dyad_helper_m %>%
+  filter(helper_status=="helper") %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 
+#basic model
+model_all <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL   
+      '
+#estimator = MLM?
+fit_all <- sem(model_m, data = dyad_male_helper, estimator = "MLM")
+summary(fit_all,standardized = TRUE, fit.measures = TRUE)
+semPaths(fit_all)
+```
 

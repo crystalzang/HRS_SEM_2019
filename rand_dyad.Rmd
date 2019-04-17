@@ -12,8 +12,8 @@ library(readr)
 ```
 
 ```{r}
-dyad_helper_f <- read_csv("dyad_helper_f.csv")
-dyad_helper_m <- read_csv("dyad_helper_m.csv")
+dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
+dyad_helper_m <- read_csv("data/dyad_helper_m.csv")
 
 dyad_female_helper <- dyad_helper_f %>%
   filter(sex=="2.Female") %>%
