@@ -49,14 +49,20 @@ rand_2014 <- rand %>%
          S12AGEY_E,  #Age
           R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
           R12OOPMD, S12OOPMD,  #Total expenditure
-         RAGENDER  #gender
+         RAGENDER,  #gender
+         S12SHLT, R12SHLT, #self reported health
+         R12HSPTIM,  S12HSPTIM,  # Hospital stays, prv 2 yrs
+         R12HSPNIT, S12HSPNIT, # Nights in hosp, prv 2 yrs
+         R12NRSNIT, S12NRSNIT,  #Nights in nurs home, prv 2 yrs
+         R12WORK, S12WORK, #working for pay
+          R12IEARN, S12IEARN,  #individual earning
         )
 
 #skim(id)
 #rename
 setnames(rand_2014 ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age"))
+         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E","S12SHLT", "R12SHLT" ),
+         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", "S_self_health", "Rself_health"))
 
 
 

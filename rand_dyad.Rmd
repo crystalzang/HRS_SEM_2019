@@ -87,7 +87,7 @@ model_f <- '
             scale_exp~R_ADL + S_ADL   
       '
 #estimator = MLM?
-fit_f <- sem(model_f, data = dyad_female_helper)
+fit_f <- sem(model_f, data = dyad_female_helper, estimator="MLMV")
 varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 library(semPlot)
