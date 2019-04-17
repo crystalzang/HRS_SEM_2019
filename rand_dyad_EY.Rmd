@@ -97,30 +97,58 @@ library(lavaan)
 dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
 dyad_female_helper <- dyad_helper_f %>%
   filter(sex=="2.Female") %>%
-  mutate(expenditure=S_expense+R_expense) %>%
-  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+#  filter(R_ADL!=0) %>%
+ # mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(R_expense, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 #basic model
 model_f <- '
-            S_CESD ~ S_ADL + scale_help + scale_exp
-            R_CESD ~ R_ADL + scale_help + scale_exp
+            S_CESD ~ S_ADL + scale_help + scale_exp+R_ADL
+            R_CESD ~ R_ADL + scale_help + scale_exp+S_ADL
             scale_help~R_ADL + S_ADL
-            scale_exp~R_ADL + S_ADL   
+            scale_exp~R_ADL + S_ADL
+            
       '
 #estimator = MLM?
-fit_f <- sem(model_f, data = dyad_female_helper)
+fit_f <- sem(model_f, data = dyad_female_helper,estimator="MLMV")
+modindices(fit_f) %>% 
+  arrange(desc(mi)) %>%
+  select(lhs, op, rhs, mi) %>%
+  head(10)
 varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 library(semPlot)
 semPaths(fit_f)
 ```
+```{r}
+dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
+dyad_female_helper <- dyad_helper_f %>%
+  filter(sex=="2.Female") %>%
+#  filter(R_ADL!=0) %>%
+ # mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(R_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+#basic model
+model_f_2 <- '
+            S_CESD ~ S_ADL + scale_help + scale_exp
+            R_CESD ~ R_ADL + scale_help + scale_exp
+            scale_help~R_ADL + S_ADL
+            scale_exp~R_ADL + S_ADL
+      '
+#estimator = MLM?
+fit_f_2 <- sem(model_f_2, data = dyad_female_helper,estimator="MLMV")
+summary(fit_f_2,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f_2)
+```
+
 
 ```{r}
 dyad_helper_m <- read_csv("data/dyad_helper_m.csv")
 dyad_male_helper <- dyad_helper_m %>%
   filter(sex=="1.Male") %>%
-  mutate(expenditure=S_expense+R_expense) %>%
-  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+ # mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(R_expense, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 
 #basic model
@@ -131,7 +159,7 @@ model_m <- '
             scale_exp~R_ADL + S_ADL   
       '
 #estimator = MLM?
-fit_m <- sem(model_m, data = dyad_male_helper, estimator = "MLM")
+fit_m <- sem(model_m, data = dyad_male_helper)
 varTable(fit_m)
 summary(fit_m,standardized = TRUE, fit.measures = TRUE)
 semPaths(fit_m)
@@ -147,8 +175,8 @@ ggplot(aes(x=S_CESD),data=dyad_female_helper)+geom_histogram(bins = 8)
 dyad_all <- read_csv("data/dyad_all.csv")
 dyad_male_helper <- dyad_helper_m %>%
   filter(helper_status=="helper") %>%
-  mutate(expenditure=S_expense+R_expense) %>%
-  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+ # mutate(expenditure=S_expense+R_expense) %>%
+  mutate(scale_exp=scale(R_expense, center = TRUE, scale = TRUE)) %>%
   mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 
 #basic model
@@ -159,7 +187,7 @@ model_all <- '
             scale_exp~R_ADL + S_ADL   
       '
 #estimator = MLM?
-fit_all <- sem(model_m, data = dyad_male_helper, estimator = "MLM")
+fit_all <- sem(model_m, data = dyad_male_helper, estimator="MLMVS")
 summary(fit_all,standardized = TRUE, fit.measures = TRUE)
 semPaths(fit_all)
 ```
