@@ -8,22 +8,18 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
-
+library(dplyr)
+library(ggplot2)
+library(lavaan)
+library(semPlot)
 ```
 
 ```{r}
 dyad_helper_f <- read_csv("data/dyad_helper_f.csv")
 dyad_helper_m <- read_csv("data/dyad_helper_m.csv")
 
-dyad_female_helper <- dyad_helper_f %>%
-  filter(sex=="2.Female") %>%
-  filter(HHIDPN != 204936010) %>%
-  mutate(expenditure=S_expense+R_expense) %>%
-  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
-  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
 ```
-# Three dyads
-
+# Two dyads
 ## 1. Both respondent and helper
 ```{r}
 dyad_1 <- rand_dyad%>%
@@ -51,7 +47,7 @@ test <- dyad_2%>%
 
 #Variable Investigation
 ```{r}
-test <- rand_dyad%>%
+test <- dyad_helper_f%>%
   group_by(R_ADL, S_ADL)%>%
   summarize(N=n())
 
@@ -66,31 +62,155 @@ ggplot( data = id_valid_dyad, aes(x = S_CESD)) + geom_histogram(binwidth = 1) + 
 
 
 ```{r}
-#why NA in standard error 
-#why mod indice is not working 
-#how to adjust estimator in the model: subscript out of bounds
-
-library(lavaan)
-dyad_helper_f <- read_csv("dyad_helper_f.csv")
 dyad_female_helper <- dyad_helper_f %>%
-  filter(sex=="2.Female") %>%
+  filter(sex=="2.Female")%>%
+  filter(R_ADL>0)%>%
   filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
-  mutate(scale_exp=scale(expenditure, center = TRUE, scale = TRUE)) %>%
-  mutate(scale_help=scale(helper_time,center=TRUE,scale=TRUE))
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))
 
-#basic model
+#basic model--cesd covariate
 model_f <- '
-            S_CESD ~ S_ADL + scale_help + scale_exp
-            R_CESD ~ R_ADL + scale_help + scale_exp
-            scale_help~R_ADL + S_ADL
-            scale_exp~R_ADL + S_ADL   
+            S_CESD ~ S_ADL +  hhour.z + exp.z
+            R_CESD ~ R_ADL + hhour.z + exp.z 
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+            S_CESD ~~ R_CESD
       '
-#estimator = MLM?
+
 fit_f <- sem(model_f, data = dyad_female_helper)
 varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 library(semPlot)
 semPaths(fit_f)
+
+
+#CFA
+#fit_f_cfa <- cfa(model_f, data=dyad_female_helper, estimator)
+
+
+#model2 -- cesd direct affect (R_CESD --> S_CESD)
+model_f <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z + R_CESD
+            R_CESD ~ R_ADL + hhour.z + exp.z 
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+
+fit_f <- sem(model_f, data = dyad_female_helper)
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+
+
+#model3 -- cesd direct affect (R_CESD <--> S_CESD)
+model_f <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z + R_CESD
+            R_CESD ~ R_ADL + hhour.z + exp.z + S_CESD
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+
+fit_f <- sem(model_f, data = dyad_female_helper)
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+
+#model4 -- cesd direct affect (R_CESD <-- S_CESD)
+model_f <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z 
+            R_CESD ~ R_ADL + hhour.z + exp.z + S_CESD
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+
+fit_f <- sem(model_f, data = dyad_female_helper)
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+
+```
+
+```{r}
+
+dyad_male_helper <- dyad_helper_m %>%
+  filter(sex=="1.Male") %>%
+  filter(R_ADL>0)%>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))
+
+#basic model
+model_m <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z
+            R_CESD ~ R_ADL + hhour.z + exp.z 
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL 
+            S_ADL ~~  R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+fit_m <- sem(model_m, data = dyad_male_helper)
+
+varTable(fit_m)
+
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_m)
+
+
+#model2 -- cesd direct affect (R_CESD --> S_CESD)
+model_m <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z + R_CESD
+            R_CESD ~ R_ADL + hhour.z + exp.z 
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+
+fit_m <- sem(model_m, data = dyad_male_helper)
+varTable(fit_m)
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_m)
+
+
+#model3 -- cesd direct affect (R_CESD <--> S_CESD)
+model_m  <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z + R_CESD
+            R_CESD ~ R_ADL + hhour.z + exp.z + S_CESD
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+fit_m <- sem(model_m, data = dyad_male_helper)
+varTable(fit_m)
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_m)
+
+
+#model4 -- cesd direct affect (R_CESD <-- S_CESD)
+model_m <- '
+            S_CESD ~ S_ADL +  hhour.z + exp.z 
+            R_CESD ~ R_ADL + hhour.z + exp.z + S_CESD
+            hhour.z~R_ADL + S_ADL
+            exp.z~R_ADL + S_ADL   
+            S_ADL ~~  R_ADL
+      '
+fit_m <- sem(model_m, data = dyad_male_helper)
+varTable(fit_m)
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_m)
 ```
 
