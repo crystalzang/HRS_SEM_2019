@@ -48,6 +48,8 @@ rand_2014 <- rand %>%
           R12CESD, S12CESD, #CESD Score, binary level yes or no
          S12AGEY_E,  #Age
           R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
+        R12IADLA, S12IADLA, #IADL Summary: sum ADLs where Respondent reports any difficulty
+
           R12OOPMD, S12OOPMD,  #Total expenditure
          RAGENDER,  #gender
          S12SHLT, R12SHLT, #self reported health
@@ -55,29 +57,53 @@ rand_2014 <- rand %>%
          R12HSPNIT, S12HSPNIT, # Nights in hosp, prv 2 yrs
          R12NRSNIT, S12NRSNIT,  #Nights in nurs home, prv 2 yrs
          R12WORK, S12WORK, #working for pay
-          R12IEARN, S12IEARN#individual earning
+          R12IEARN, S12IEARN, #individual earning
+         R12TR20,  S12TR20, #memory recall
+         R12COGTOT,  S12COGTOT, #cognitive summary score
+         R12MSTOT,  S12MSTOT, #mental status score
+         R12HLTC, S12HLTC, #Health change (self reported health compared to last year)
+        R12DRUGS,  S12DRUGS,  #using drug
+        R12OUTPT, S12OUTPT, #surgery
+        R12SPCFAC, S12SPCFAC #specific health service
         )
 
 #skim(id)
 #rename
 setnames(rand_2014 ,
-         old=c("R12ADLA", "S12ADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E",
+         old=c("R12ADLA", "S12ADLA", "R12IADLA", "S12IADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "S12AGEY_E",
                "R12SHLT", "S12SHLT", 
                "R12HSPTIM", "S12HSPTIM",
                "R12HSPNIT", "S12HSPNIT",
                "R12WORK", "S12WORK",
-               "R12IEARN", "S12IEARN"),
-         new = c("R_ADL", "S_ADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", 
+               "R12IEARN", "S12IEARN",
+               "R12TR20", "S12TR20",
+               "R12COGTOT", "S12COGTOT",
+               "R12MSTOT", "S12MSTOT",
+               "R12HLTC", "S12HLTC",
+               "R12DRUGS", "S12DRUGS",
+               "R12OUTPT", "S12OUTPT",
+               "R12SPCFAC", "S12SPCFAC"
+               ),
+         
+         new = c("R_ADL", "S_ADL","R_IADL", "S_IADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", 
                 "R_self_health", "S_self_health",
                 "R_hostital_stay","S_hostital_stay",
                 "R_nights_hospital","S_nights_hospital",
                 "R_work_pay",  "S_work_pay",
-                "R_income_i", "S_income_i"))
+                "R_income_i", "S_income_i", 
+                "R_memory", "S_memory",
+                "R_cog_score", "S_cog_score",
+                "R_mental_score", "S_mental_score",
+                "R_self_health_change","S_self_health_change",
+                "R_drug", "S_drug",
+                "R_surgery", "S_surgery",
+                "R_special_hservice", "S_special_hservice"
+                ))
 
 
-
+#THIS IS FOR IADL (We filter out R_IADL na )
 rand_2014_R_valid <- rand_2014%>%
-  filter(!is.na(R_ADL), !is.na(R_CESD), !is.na(R_expense), !is.na(R_self_health), !is.na(R_hostital_stay), !is.na(R_nights_hospital), !is.na(R_work_pay), !is.na(R_income_i))
+  filter(!is.na(R_ADL), !is.na(R_CESD))
 
 
 nrow(rand_2014_R_valid)
@@ -166,8 +192,8 @@ test <- helper%>%
 #Join helper with spouse in RAND, indicating spouses who are helpers
 class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-#rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
-helper_id$respondent_id<- as.character(helper_id$respondent_id)
+rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
+#helper_id$respondent_id<- as.character(helper_id$respondent_id)
 
 helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%
@@ -320,6 +346,11 @@ id_ls <- id_unique$HHIDPN
 dyad_diff <- anti_join(dyad_helper_m_join2, dyad_helper_f_join2, by="HHIDPN")
 
 dyad_all<-rbind(dyad_helper_f_join2, dyad_diff)
+table(dyad_all$R_ADL)
+
+data <- dyad_all%>%
+  filter(R_ADL > 0)
+
 write.csv(dyad_all, file="~/Desktop/HRS_SEM_2019/data/dyad_all.csv", row.names = F)
 
 
