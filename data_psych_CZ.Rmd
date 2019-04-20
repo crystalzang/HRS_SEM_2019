@@ -1,0 +1,43 @@
+---
+title: "data_psych_CZ"
+author: "CZ"
+date: "4/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
+#functions
+'%ni%' <- Negate('%in%')
+library(haven)
+library(data.table)
+```
+
+```{r}
+psych<- read_sav("~/Desktop/data/H14LB_R.sav", encoding = NULL, user_na = FALSE)
+```
+
+```{r}
+head(psych)
+
+psych_data1 <- psych %>%
+  select(HHID,PN,OPN_SP,OLB018A,OLB018B,OLB018C,OLB018D,OLB018E,OLB018F,OLB018G,OLB018H,OLB018I,OLB018J)
+
+psych_data1 $HHID<- as.numeric(psych_data1 $HHID)
+psych_data1 $PN<- as.numeric(psych_data1 $PN)
+psych_data1 $OPN_SP<- as.numeric(psych_data1 $OPN_SP)
+
+psych_data2<- psych_data1%>%
+  filter(!is.na(OPN_SP))%>%
+  filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
+#  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))
+  mutate(respondent_id= 1000*HHID + PN, spouse_id=1000*HHID + OPN_SP)
+```
+
