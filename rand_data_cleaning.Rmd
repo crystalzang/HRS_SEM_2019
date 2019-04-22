@@ -21,6 +21,19 @@ library(skimr)
 
 ```{r}
 rand <- read_csv("~/Desktop/data/randhrs.csv")
+
+#R12CONDE (health condition)
+
+rand_edit <- rand%>%
+  filter(!is.na(R12ADLA))%>%
+  mutate(ADL_binary = if_else(R12ADLA > 0, 1, 0))
+
+rand_edit  <- rand_edit[!duplicated(rand_edit$HHIDPN), ]
+rand_edit$ADL_binary
+rand_edit$ADL_binary <- as.factor(rand_edit$ADL_binary) 
+
+model_logistic <- glm(ADL_binary~ R12AGEY_E, data = rand_edit, family = poisson())
+summary(model_linear)
 ```
 
 
@@ -64,7 +77,8 @@ rand_2014 <- rand %>%
          R12HLTC, S12HLTC, #Health change (self reported health compared to last year)
         R12DRUGS,  S12DRUGS,  #using drug
         R12OUTPT, S12OUTPT, #surgery
-        R12SPCFAC, S12SPCFAC #specific health service
+        R12SPCFAC, S12SPCFAC, #specific health service
+        R12CONDE, S12CONDE
         )
 
 #skim(id)
@@ -82,7 +96,8 @@ setnames(rand_2014 ,
                "R12HLTC", "S12HLTC",
                "R12DRUGS", "S12DRUGS",
                "R12OUTPT", "S12OUTPT",
-               "R12SPCFAC", "S12SPCFAC"
+               "R12SPCFAC", "S12SPCFAC",
+               "R12CONDE", "S12CONDE"
                ),
          
          new = c("R_ADL", "S_ADL","R_IADL", "S_IADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "age", 
@@ -97,7 +112,9 @@ setnames(rand_2014 ,
                 "R_self_health_change","S_self_health_change",
                 "R_drug", "S_drug",
                 "R_surgery", "S_surgery",
-                "R_special_hservice", "S_special_hservice"
+                "R_special_hservice", "S_special_hservice",
+                "R_health_condition", "S_health_condition"
+                
                 ))
 
 
@@ -192,8 +209,8 @@ test <- helper%>%
 #Join helper with spouse in RAND, indicating spouses who are helpers
 class(rand_2014_R_valid$HHIDPN)
 class(helper_id$respondent_id)
-rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
-#helper_id$respondent_id<- as.character(helper_id$respondent_id)
+#rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)
+helper_id$respondent_id<- as.character(helper_id$respondent_id)
 
 helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
   filter(helper=="Y")%>%

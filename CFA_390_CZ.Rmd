@@ -135,7 +135,7 @@ female_helper_psych_clean<- female_helper_psych%>%
   mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
   mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0))  %>%
   filter(sex=="2.Female")%>%   ### Change gender here 
-  filter(R_ADL>0)%>%
+ # filter(R_ADL>0)%>%
   filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
   mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
@@ -144,12 +144,12 @@ female_helper_psych_clean<- female_helper_psych%>%
   mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
   mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
  mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
-  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE))
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE)) %>%
+  mutate(R_ADL_binary = if_else(R_ADL > 0, 1, 0))
 
+#table(female_helper_psych_clean$R_ADL_binary)
 
-
-table(female_helper_psych_clean$R_ADL)
-mplot(female_helper_psych_clean)
+#mplot(female_helper_psych_clean)
 ```
 
 
@@ -198,13 +198,13 @@ semPaths(fit_f)
 # Model 2
 ```{r}
 model_f <- '#Measurement model
-              helplessness =~ optimism_A + optimism_G + optimism_H + optimism_I + optimism_J
+              helplessness =~  optimism_G + optimism_H + optimism_I + optimism_J
               hopelessness =~ optimism_B + optimism_C + optimism_D
               expectation =~ optimism_E + optimism_F
 
               understanding =~ sp_eqA + sp_eqB + sp_eqC + sp_eqF_r
               acceptance =~ sp_eqD_r + sp_eqE_r + sp_eqG_r
-              closeness =~ sp_relationA + sp_relationB
+              closeness =~ sp_relation+ sp_relationA + sp_relationB
       
             optimism =~ helplessness  + hopelessness + expectation
             spouse_eq = ~ understanding + acceptance + closeness
@@ -236,5 +236,9 @@ varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 
 semPaths(fit_f)
+
+
+model_linear <- glm(R_ADL_binary~age, data =female_helper_psych_clean , family = poisson())
+summary(model_linear)
 ```
 
