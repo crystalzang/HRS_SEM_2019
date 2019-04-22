@@ -1,0 +1,240 @@
+---
+title: "CFA for psychological variables"
+author: "Elaine Ye"
+date: "April 20^th^, 2019"
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(GPArotation)
+library(psych)
+library(haven)
+library(lavaan)
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
+```
+
+```{r}
+#female_helper_psych <- read_csv("~/Desktop/HRS_SEM_2019_0422/data/dyad_helper_f_psych.csv")
+female_helper_psych <- read_csv("data/dyad_helper_f_psych.csv")
+
+```
+
+```{r}
+#correlation among optimism items 
+matrix <- corr.test(select(female_helper_psych, optimism_A:optimism_J))$r
+
+cor.plot(matrix)
+```
+
+```{r}
+#reverse items and run correlations again
+female_helper_psych <- female_helper_psych %>%
+  mutate(
+         optimism_B_r = 7 - optimism_B,
+         optimism_C_r = 7 - optimism_C,
+         optimism_D_r = 7 - optimism_D)
+
+r_matrix2 <- corr.test(select(female_helper_psych, optimism_A,optimism_B_r,optimism_C_r,optimism_D_r,optimism_E,optimism_F,optimism_G,optimism_H,optimism_I,optimism_J))$r
+
+cor.plot(r_matrix2)
+```
+
+```{r}
+#exploratory factor analysis 
+cor_matrix <- corr.test(select(female_helper_psych, optimism_A,optimism_B_r,optimism_C_r,optimism_D_r,optimism_E,optimism_F,optimism_G,optimism_H,optimism_I,optimism_J))$r
+fa <- fa(cor_matrix, nfactors = 3, rotate = "oblimin", fm = "pa")
+round(fa$weights, 2)
+fa
+```
+
+PA1: helplessness: A, G, H, I, J
+
+PA2: hopelessness: B, C, D 
+
+PA3: expectation: E, F 
+
+Raw.alpha for all factors are > 0.70 
+
+
+```{r}
+cfa_model <- 'helplessness =~ optimism_A + optimism_G + optimism_H + optimism_I + optimism_J
+              hopelessness =~ optimism_B + optimism_C + optimism_D
+              expectation =~ optimism_E + optimism_F'
+
+cfa_fit <- cfa(cfa_model, data = female_helper_psych) 
+summary(cfa_fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+```{r}
+#cor.matrix for relationship satisfaction
+sp_matrix <- corr.test(select(female_helper_psych, sp_eqA:sp_relationA))$r
+
+cor.plot(sp_matrix)
+```
+
+```{r}
+#reverse items and run correlations again
+female_helper_psych <- female_helper_psych %>%
+  mutate(
+         sp_eqD_r = 5 - sp_eqD,
+         sp_eqE_r = 5 - sp_eqE,
+         sp_eqF_r = 5 - sp_eqF,
+         sp_eqG_r = 5 - sp_eqG)
+
+sp_matrix2 <- corr.test(select(female_helper_psych, sp_eqA,sp_eqB,sp_eqC,sp_eqD_r,sp_eqE_r,sp_eqF_r,sp_eqG_r,sp_relation,sp_relationA,sp_relationB))$r
+
+cor.plot(sp_matrix2)
+```
+
+```{r}
+fa_3 <- fa(sp_matrix2, nfactors = 3, rotate = "oblimin", fm = "pa")
+
+fa_3
+```
+
+Factor 1: understanding: eqA, eqB, eqC, eqF
+Factor 2: acceptance: eqD, eqE, eqG 
+Factor 3: closeness: sp_relation, relation_A, relation_B
+
+```{r}
+#cfa model for satisfaction 
+cfa_model_2 <- 'understanding =~ sp_eqA + sp_eqB + sp_eqC + sp_eqF_r
+              acceptance =~ sp_eqD_r + sp_eqE_r + sp_eqG_r
+              closeness =~ sp_relationA + sp_relationB'
+
+cfa_fit_2 <- cfa(cfa_model_2, data = female_helper_psych) 
+summary(cfa_fit_2, standardized = TRUE, fit.measures = TRUE)
+
+```
+
+
+```{r}
+female_helper_psych_clean<- female_helper_psych%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4,5))))) %>%
+  mutate(R_self_health_change = if_else(R_self_health_change  == "2.Somewhat better", 0,
+                                if_else(R_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(S_self_health_change = if_else(S_self_health_change=="2.Somewhat better", 0,
+                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(R_drug =if_else(R_drug == "1.Yes", 1, 0)) %>%
+  mutate(S_drug =if_else(S_drug == "1.Yes", 1, 0)) %>%
+  mutate(R_surgery =if_else(R_surgery == "1.Yes", 1, 0)) %>%
+  mutate(S_surgery=if_else(S_surgery == "1.Yes", 1, 0)) %>%
+  mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
+  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0))  %>%
+  filter(sex=="2.Female")%>%   ### Change gender here 
+  filter(R_ADL>0)%>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(R_exp.z=scale(R_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
+  mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
+ mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE))
+
+
+
+table(female_helper_psych_clean$R_ADL)
+mplot(female_helper_psych_clean)
+```
+
+
+# Model 1
+```{r}
+model_f <- '#Measurement model
+              helplessness =~ optimism_A + optimism_G + optimism_H + optimism_I + optimism_J
+              hopelessness =~ optimism_B + optimism_C + optimism_D
+              expectation =~ optimism_E + optimism_F
+
+              understanding =~ sp_eqA + sp_eqB + sp_eqC + sp_eqF_r
+              acceptance =~ sp_eqD_r + sp_eqE_r + sp_eqG_r
+              closeness =~ sp_relationA + sp_relationB
+
+
+            #Structural model
+            S_CESD ~ S_ADL +R_ADL + R_exp.z + R_income_i.z + S_self_health + R_self_health + helplessness+ hopelessness +  expectation +understanding +acceptance +closeness
+            R_CESD ~ R_ADL+ S_ADL + S_self_health + R_self_health + S_income_i.z + S_self_health + R_self_health  + helplessness+ hopelessness +  expectation +understanding +acceptance +closeness
+
+            helplessness ~ R_ADL + S_ADL
+            hopelessness~ R_ADL + S_ADL
+            expectation~ R_ADL + S_ADL
+            understanding~ R_ADL + S_ADL
+            acceptance~ R_ADL + S_ADL
+            closeness~ R_ADL + S_ADL
+
+            S_self_health ~ R_ADL + S_ADL 
+            R_self_health ~ R_ADL + S_ADL 
+          
+          
+            S_ADL ~~  R_ADL 
+            S_CESD ~~ R_CESD
+            S_self_health ~~ S_self_health_change
+            R_self_health ~~ R_self_health_change
+      '
+
+fit_f <- sem(model_f, data =female_helper_psych_clean, estimator="MLMV")
+
+
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+
+semPaths(fit_f)
+```
+
+# Model 2
+```{r}
+model_f <- '#Measurement model
+              helplessness =~ optimism_A + optimism_G + optimism_H + optimism_I + optimism_J
+              hopelessness =~ optimism_B + optimism_C + optimism_D
+              expectation =~ optimism_E + optimism_F
+
+              understanding =~ sp_eqA + sp_eqB + sp_eqC + sp_eqF_r
+              acceptance =~ sp_eqD_r + sp_eqE_r + sp_eqG_r
+              closeness =~ sp_relationA + sp_relationB
+      
+            optimism =~ helplessness  + hopelessness + expectation
+            spouse_eq = ~ understanding + acceptance + closeness
+
+            #Structural model
+            
+            S_CESD ~ S_ADL +R_ADL  + S_self_health + R_self_health + optimism + spouse_eq
+            R_CESD ~ R_ADL+ S_ADL + S_self_health + R_self_health  + S_self_health + R_self_health  + optimism + spouse_eq
+
+            optimism ~ R_ADL + S_ADL
+            spouse_eq~ R_ADL + S_ADL
+
+            S_self_health ~ R_ADL + S_ADL 
+            R_self_health ~ R_ADL + S_ADL 
+            
+            R_ADL~  age
+            S_ADL~ age
+
+            S_ADL ~~  R_ADL 
+            S_CESD ~~ R_CESD
+            S_self_health ~~ S_self_health_change
+            R_self_health ~~ R_self_health_change
+      '
+
+fit_f <- sem(model_f, data =female_helper_psych_clean, estimator="MLMV")
+
+
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+
+semPaths(fit_f)
+```
+
