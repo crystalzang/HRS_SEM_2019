@@ -83,9 +83,155 @@ ggplot(data=dyad_female_helper,aes(x=scale_exp))+geom_histogram()
 ```
 
 ```{r}
-
+#change ADL to cognitive score 
+female_helper_psych <- read_csv("~/Desktop/HRS_SEM_2019/data/dyad_helper_f_psych.csv")
 ```
 
+
+
+```{r}
+female_helper_psych<- female_helper_psych%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4,5))))) %>%
+  mutate(R_self_health_change = if_else(R_self_health_change  == "2.Somewhat better", 0,
+                                if_else(R_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(S_self_health_change = if_else(S_self_health_change=="2.Somewhat better", 0,
+                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(R_drug =if_else(R_drug == "1.Yes", 1, 0)) %>%
+  mutate(S_drug =if_else(S_drug == "1.Yes", 1, 0)) %>%
+  mutate(R_surgery =if_else(R_surgery == "1.Yes", 1, 0)) %>%
+  mutate(S_surgery=if_else(S_surgery == "1.Yes", 1, 0)) %>%
+  mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
+  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0))  %>%
+  filter(sex=="2.Female")%>%   ### Change gender here 
+  filter(R_ADL>0)%>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(R_exp.z=scale(R_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
+  mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
+ mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE)) %>%
+  mutate(R_ADL_binary = if_else(R_ADL > 0, 1, 0))%>%
+  mutate(optimism_B_r = 7 - optimism_B,
+         optimism_C_r = 7 - optimism_C,
+         optimism_D_r = 7 - optimism_D)%>%
+  mutate(
+         sp_eqD_r = 5 - sp_eqD,
+         sp_eqE_r = 5 - sp_eqE,
+         sp_eqF_r = 5 - sp_eqF,
+         sp_eqG_r = 5 - sp_eqG)
+```
+
+
+```{r}
+model_f <- '
+            S_CESD ~ S_self_health + S_ADL + S_cog_score + R_self_health
+            R_CESD ~ S_self_health  + R_cog_score + R_self_health 
+            S_self_health ~ S_ADL
+            R_self_health ~ R_ADL
+            S_ADL ~ S_cog_score
+            R_ADL ~  R_cog_score
+            S_CESD ~~ R_CESD  '
+
+fit_f <- sem(model_f, data = female_helper_psych, estimator="MLMV")
+
+
+varTable(fit_f)
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+```
+
+```{r}
+male_helper_psych <- read_csv("~/Desktop/HRS_SEM_2019/data/dyad_helper_m_psych.csv")
+male_helper_psych<- male_helper_psych%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4,5))))) %>%
+  mutate(R_self_health_change = if_else(R_self_health_change  == "2.Somewhat better", 0,
+                                if_else(R_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(S_self_health_change = if_else(S_self_health_change=="2.Somewhat better", 0,
+                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(R_drug =if_else(R_drug == "1.Yes", 1, 0)) %>%
+  mutate(S_drug =if_else(S_drug == "1.Yes", 1, 0)) %>%
+  mutate(R_surgery =if_else(R_surgery == "1.Yes", 1, 0)) %>%
+  mutate(S_surgery=if_else(S_surgery == "1.Yes", 1, 0)) %>%
+  mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
+  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0))  %>%
+  filter(sex=="2.Female")%>%   ### Change gender here 
+  filter(R_ADL>0)%>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(R_exp.z=scale(R_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
+  mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
+ mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE)) %>%
+  mutate(R_ADL_binary = if_else(R_ADL > 0, 1, 0))%>%
+  mutate(optimism_B_r = 7 - optimism_B,
+         optimism_C_r = 7 - optimism_C,
+         optimism_D_r = 7 - optimism_D)%>%
+  mutate(
+         sp_eqD_r = 5 - sp_eqD,
+         sp_eqE_r = 5 - sp_eqE,
+         sp_eqF_r = 5 - sp_eqF,
+         sp_eqG_r = 5 - sp_eqG)
+```
+
+
+```{r}
+model_m <- '
+            S_CESD ~ S_self_health + S_ADL + S_cog_score + R_self_health
+            R_CESD ~ S_self_health  + R_cog_score + R_self_health 
+            S_self_health ~ S_ADL
+            R_self_health ~ R_ADL
+            S_ADL ~ S_cog_score
+            R_ADL ~  R_cog_score
+            S_CESD ~~ R_CESD  '
+
+fit_m <- sem(model_m, data = male_helper_psych, estimator="MLR")
+
+
+varTable(fit_m)
+summary(fit_m,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_m)
+```
+
+
+
+
+```{r}
+
+model_f <- '
+            S_CESD ~ S_cog_score + exp.z + exp.z+R_cog_score + S_health_condition + R_health_condition 
+            R_CESD ~ R_cog_score + hhour.z + exp.z+S_cog_score + S_health_condition + R_health_condition 
+            hhour.z~R_cog_score + S_cog_score
+            exp.z~R_cog_score + S_cog_score
+            S_health_condition~R_cog_score + S_cog_score
+             R_health_condition ~R_cog_score + S_cog_score
+        '
+fit_f <- sem(model_f, data = female_helper_psych,estimator="MLMV")
+summary(fit_f,standardized = TRUE, fit.measures = TRUE)
+library(semPlot)
+semPaths(fit_f)
+
+```
 
 
 ```{r}
@@ -106,9 +252,13 @@ model_f <- '
             S_CESD ~ S_ADL + scale_help + scale_exp+R_ADL
             R_CESD ~ R_ADL + scale_help + scale_exp+S_ADL
             scale_help~R_ADL + S_ADL
-            scale_exp~R_ADL + S_ADL
-            
-      '
+            scale_exp~R_ADL + S_ADL      '
+```
+
+
+
+
+```{r}
 #estimator = MLM?
 fit_f <- sem(model_f, data = dyad_female_helper,estimator="MLMV")
 modindices(fit_f) %>% 
