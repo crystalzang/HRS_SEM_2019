@@ -84,13 +84,13 @@ ggplot(data=dyad_female_helper,aes(x=scale_exp))+geom_histogram()
 
 ```{r}
 #change ADL to cognitive score 
-female_helper_psych <- read_csv("~/Desktop/HRS_SEM_2019/data/dyad_helper_f_psych.csv")
+female_helper <- read_csv("~/Desktop/HRS_SEM_2019/data/dyad_helper_f.csv")
 ```
 
 
 
 ```{r}
-female_helper_psych<- female_helper_psych%>%
+female_helper<- female_helper%>%
   mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
                          if_else(S_self_health == "2.Very good", 2,
                          if_else(S_self_health == "3.Good", 3,
@@ -111,7 +111,7 @@ female_helper_psych<- female_helper_psych%>%
   mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0))  %>%
   filter(sex=="2.Female")%>%   ### Change gender here 
   filter(R_ADL>0)%>%
-  filter(HHIDPN != 204936010) %>%
+#  filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
   mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
   mutate(R_exp.z=scale(R_expense, center = TRUE, scale = TRUE)) %>%
@@ -119,7 +119,11 @@ female_helper_psych<- female_helper_psych%>%
   mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
   mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
  mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
-  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE)) %>%
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE)) 
+```
+
+```{r}
+%>%
   mutate(R_ADL_binary = if_else(R_ADL > 0, 1, 0))%>%
   mutate(optimism_B_r = 7 - optimism_B,
          optimism_C_r = 7 - optimism_C,
@@ -132,6 +136,7 @@ female_helper_psych<- female_helper_psych%>%
 ```
 
 
+
 ```{r}
 model_f <- '
             S_CESD ~ S_self_health + S_ADL + S_cog_score + R_self_health
@@ -142,13 +147,17 @@ model_f <- '
             R_ADL ~  R_cog_score
             S_CESD ~~ R_CESD  '
 
-fit_f <- sem(model_f, data = female_helper_psych, estimator="MLMV")
+fit_f <- sem(model_f, data = female_helper, estimator="MLMV")
 
 
 varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 library(semPlot)
 semPaths(fit_f)
+
+female_helper <- female_helper %>%
+  select(R_ADL, S_ADL, S_self_healh, R_self_health, S_CESD, R_CESD)
+cor = cor(female_helper)
 ```
 
 ```{r}
@@ -204,7 +213,7 @@ model_m <- '
             R_ADL ~  R_cog_score
             S_CESD ~~ R_CESD  '
 
-fit_m <- sem(model_m, data = male_helper_psych, estimator="MLR")
+fit_m <- sem(model_m, data = male_helper_psych, estimator="MLMV")
 
 
 varTable(fit_m)
