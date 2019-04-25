@@ -3,6 +3,8 @@ title: "rand_dyad"
 author: "CZ"
 date: "3/26/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -80,7 +82,8 @@ table(dyad_helper_f$R_self_health_change)
 
 # Data Cleaning
 ```{r}
-dyad_helper_f_edit<- dyad_helper_f%>%
+
+dyad_female_helper<- dyad_helper_f%>%
   mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
                          if_else(S_self_health == "2.Very good", 2,
                          if_else(S_self_health == "3.Good", 3,
@@ -88,22 +91,18 @@ dyad_helper_f_edit<- dyad_helper_f%>%
   mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
                          if_else(R_self_health == "2.Very good", 2,
                          if_else(R_self_health == "3.Good", 3,
-                         if_else(R_self_health == "4.Fair", 4,5))))) %>%
+                         if_else(R_self_health == "4.Fair", 4, 5))))) %>%
   mutate(R_self_health_change = if_else(R_self_health_change  == "2.Somewhat better", 0,
                                 if_else(R_self_health_change == "3.Same", 1, 2)))%>%
   mutate(S_self_health_change = if_else(S_self_health_change=="2.Somewhat better", 0,
-                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%
+                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%  #WORSE IS LEVEL 2
   mutate(R_drug =if_else(R_drug == "1.Yes", 1, 0)) %>%
   mutate(S_drug =if_else(S_drug == "1.Yes", 1, 0)) %>%
   mutate(R_surgery =if_else(R_surgery == "1.Yes", 1, 0)) %>%
   mutate(S_surgery=if_else(S_surgery == "1.Yes", 1, 0)) %>%
   mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
-  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0)) 
-  
-
-
-dyad_female_helper <- dyad_helper_f_edit %>%
-  filter(sex=="2.Female")%>%
+  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0)) %>%
+  filter(sex=="2.Female")%>%   #gender
   filter(R_ADL>0)%>%
   filter(HHIDPN != 204936010) %>%
   mutate(expenditure=S_expense+R_expense) %>%
@@ -113,7 +112,45 @@ dyad_female_helper <- dyad_helper_f_edit %>%
   mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
   mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
  mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
-  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE))
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE))%>%
+  mutate(R_ADL_binary = if_else(R_ADL > 1, 1,0))%>%  #1 is severe, 0 is not severe 
+  mutate(S_ADL_binary = if_else(R_ADL > 1, 1,0))
+
+
+dyad_male_helper<- dyad_helper_m%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4, 5))))) %>%
+  mutate(R_self_health_change = if_else(R_self_health_change  == "2.Somewhat better", 0,
+                                if_else(R_self_health_change == "3.Same", 1, 2)))%>%
+  mutate(S_self_health_change = if_else(S_self_health_change=="2.Somewhat better", 0,
+                                if_else(S_self_health_change == "3.Same", 1, 2)))%>%  #WORSE IS LEVEL 2
+  mutate(R_drug =if_else(R_drug == "1.Yes", 1, 0)) %>%
+  mutate(S_drug =if_else(S_drug == "1.Yes", 1, 0)) %>%
+  mutate(R_surgery =if_else(R_surgery == "1.Yes", 1, 0)) %>%
+  mutate(S_surgery=if_else(S_surgery == "1.Yes", 1, 0)) %>%
+  mutate(R_special_hservice=if_else(R_special_hservice == "1.Yes", 1, 0)) %>%
+  mutate(S_special_hservice=if_else(S_special_hservice == "1.Yes", 1, 0)) %>%
+  filter(sex=="1.Male")%>%   #gender
+  filter(R_ADL>0)%>%
+  filter(HHIDPN != 204936010) %>%
+  mutate(expenditure=S_expense+R_expense) %>%
+  mutate(S_exp.z=scale(S_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(R_exp.z=scale(R_expense, center = TRUE, scale = TRUE)) %>%
+  mutate(exp.z=scale(expenditure, center = TRUE, scale = TRUE)) %>%
+  mutate(hhour.z=scale(helper_time,center=TRUE,scale=TRUE))%>%
+  mutate(R_income_i.z = scale(R_income_i,center=TRUE,scale=TRUE))%>%
+ mutate(S_income_i.z = scale(S_income_i,center=TRUE,scale=TRUE))%>%
+  mutate(R_hostital_stay.z = scale(R_hostital_stay,center=TRUE,scale=TRUE))%>%
+  mutate(R_ADL_binary = if_else(R_ADL > 1, 1,0))%>%  #1 is severe, 0 is not severe 
+  mutate(S_ADL_binary = if_else(R_ADL > 1, 1,0))
+
+dyad_all_helper <- rbind(dyad_male_helper, dyad_female_helper)
 
 
 ```
@@ -121,85 +158,173 @@ dyad_female_helper <- dyad_helper_f_edit %>%
 
 
 ```{r}
+dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")%>%
+  select(-X1)
+
+
+tb1<- dyad_all_helper_final%>%
+  select(R_age, S_age, R_ADL, S_ADL, R_self_health, S_self_health, S_CESD, R_CESD)
+
+library(stargazer)
+stargazer(tb1,  type="text", title="Table 1", out="table.txt")
+
+
+
+mplot(dyad_all_helper_final)
+
+glimpse(dyad_all_helper_final)
+
+dyad <- dyad_all_helper_final%>%
+  select(-HHIDPN, -PN, -dyad, -helper_status, -HHID, -R_ADL_binary, -R_IADL)
+
+#%>%
+ # mutate(sex = if_else(sex == "2.Female", 0, 1))
+
+
+model <- lm(R_ADL~ R_age+ R_expense + R_cog_score +R_mental_score, data = dyad)
+
+dyad$sex <- as.factor(dyad$sex)
+
+model <- glm(sex~ ., data = dyad, family=binomial)
+
+summary(model)
+```
+
+#model
+```{r}
+#Use this!!!!!
+model_free<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+
+model_free<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+
+
+#Use this!!!!!
+model_constrain<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+model_constrain<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + c("b1", "b1") *S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + c("b1", "b1") * S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+
+
+  # S_self_health ~~ R_self_health
+#all group together
+allgroups.fit = sem(model_all, data = dyad_all_helper_final, meanstructure=TRUE, estimator= "MLMV")
+
+summary(allgroups.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#female
+female <- dyad_all_helper_final%>%
+  filter(sex == "2.Female")
+female.fit = sem(model_all, data = female, meanstructure=TRUE, estimator= "MLMV")
+
+summary(allgroups.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+
+
+#male
+male <- dyad_all_helper_final%>%
+  filter(sex == "1.Male")
+male.fit = sem(model_all, data = male, meanstructure=TRUE,estimator= "MLMV")
+
+summary(male.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#free
+#free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator= "MLMV", test="bootstrap")
+
+free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", test="bootstrap")
+
+
+summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#constrained
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV")
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV", group.equal = c("intercepts", "regressions"))
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", test="bootstrap")
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", group.equal = c("intercepts", "regressions"),estimator= "MLMV", fixed.x=FALSE, test="bootstrap")
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", group.equal = c("intercepts", "regressions"), test="bootstrap")
+
+
+summary(constrain.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+anova(constrain.fit)
+anova(free.fit, constrain.fit)
+```
+
+
+```{r}
+#smallest model (COVARIATE DEPRESSION)
 model_f <- '
-            S_CESD ~ S_ADL + R_ADL + exp.z + R_income_i.z + S_self_health + R_self_health 
-            R_CESD ~ R_ADL+ S_ADL+ S_self_health + R_self_health + S_income_i.z + S_self_health + R_self_health 
-            hhour.z~ R_ADL + S_ADL 
-            exp.z ~  R_ADL + S_ADL  +  S_income_i.z 
+            S_CESD ~ S_ADL +R_ADL  + S_self_health + R_self_health 
+            R_CESD ~ R_ADL+ S_ADL + S_self_health + R_self_health 
             S_self_health ~ R_ADL + S_ADL 
             R_self_health ~ R_ADL + S_ADL 
-            S_income_i.z ~  R_ADL + S_ADL  
-            R_income_i.z ~ R_ADL + S_ADL 
-            R_hostital_stay.z~ R_ADL + S_ADL  
-            S_ADL ~~  R_ADL 
+            S_ADL ~~ R_ADL
             S_CESD ~~ R_CESD
-            S_self_health ~~ S_self_health_change
-            R_self_health ~~ R_self_health_change
-
-            S_self_health_change ~ R_ADL + S_ADL 
-            R_self_health_change ~ R_ADL + S_ADL 
+            S_self_health ~~ R_self_health
       '
 
 fit_f <- sem(model_f, data = dyad_female_helper, estimator="MLMV")
 
-
-varTable(fit_f)
-summary(fit_f,standardized = TRUE, fit.measures = TRUE)
-library(semPlot)
-semPaths(fit_f)
-
-
-#smaller model
-model_f <- '
-            S_CESD ~ S_ADL +R_ADL + R_exp.z + R_income_i.z + S_self_health + R_self_health 
-            R_CESD ~ R_ADL+ S_ADL + S_self_health + R_self_health + S_income_i.z + S_self_health + R_self_health 
-            hhour.z~ R_ADL + S_ADL 
-            S_exp.z ~  R_ADL + S_ADL  +  S_income_i.z 
-            R_exp.z ~  R_ADL + S_ADL  +  S_income_i.z 
-            S_self_health ~ R_ADL + S_ADL 
-            R_self_health ~ R_ADL + S_ADL 
-            S_income_i.z ~  R_ADL + S_ADL  
-            R_income_i.z ~ R_ADL + S_ADL 
-            R_hostital_stay.z~ R_ADL + S_ADL  
-            S_ADL ~~  R_ADL 
-            S_CESD ~~ R_CESD
-            S_self_health ~~ S_self_health_change
-            R_self_health ~~ R_self_health_change
-
-            S_self_health_change ~ R_ADL + S_ADL 
-            R_self_health_change ~ R_ADL + S_ADL 
-      '
-
-
-model_f <- '
-            S_CESD ~ S_ADL +R_ADL + R_exp.z + R_income_i.z + S_self_health + R_self_health
-            R_CESD ~ R_ADL+ S_ADL + S_self_health + R_self_health + S_income_i.z + S_self_health + R_self_health  +age
-            hhour.z~ R_ADL + S_ADL 
-            S_exp.z ~  R_ADL + S_ADL  +  S_income_i.z 
-            R_exp.z ~  R_ADL + S_ADL  +  S_income_i.z 
-            S_self_health ~ R_ADL + S_ADL 
-            R_self_health ~ R_ADL + S_ADL 
-            S_income_i.z ~  R_ADL + S_ADL  
-            R_income_i.z ~ R_ADL + S_ADL 
-            R_hostital_stay.z~ R_ADL + S_ADL  
-            S_ADL ~~  R_ADL 
-            S_CESD ~~ R_CESD
-            S_self_health ~~ S_self_health_change
-            R_self_health ~~ R_self_health_change
-            age ~ R_ADL
-            S_self_health_change ~ R_ADL + S_ADL 
-            R_self_health_change ~ R_ADL + S_ADL 
-      '
-
-fit_f <- sem(model_f, data = dyad_female_helper, estimator="MLMV")
-
-
 varTable(fit_f)
 summary(fit_f,standardized = TRUE, fit.measures = TRUE)
 
 semPaths(fit_f)
 
 
+modindices(fit_f)%>%
+  arrange(desc(mi))%>%
+  select(lhs, op, rhs, mi)%>%
+  head(20)
 ```
 
 
