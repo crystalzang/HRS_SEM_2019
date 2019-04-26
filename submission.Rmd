@@ -1,0 +1,45 @@
+---
+title: "submission"
+author: "Elaine Ye"
+date: "4/25/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+#free model 
+dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")
+model_free<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+
+            S_CESD ~~ R_CESD
+      '
+
+free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator="MLMV")
+
+
+summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#constrain model 
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ c("b1", "b1") *R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+
+            S_CESD ~~ R_CESD
+      '
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV", group.equal = c("intercepts", "regressions"))
+
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV")
+summary(constrain.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+```
+

@@ -17,6 +17,33 @@ library(mosaic)
 library(skimr)
 ```
 
+#Correlation matrix
+```{r}
+dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")%>%
+  select(-X1)
+
+tb_f <- dyad_all_helper_final %>%
+  filter(sex == "2.Female") %>%
+  select(R_age, S_age, R_ADL, S_ADL, R_self_health, S_self_health, R_CESD, S_CESD)
+
+tb1<- dyad_all_helper_final%>%
+  select(R_age, S_age, R_ADL, S_ADL, R_self_health, S_self_health, R_CESD, S_CESD)
+
+tb1 <- na.omit(tb1)
+cor_table = cor(tb1)
+cor_table
+
+tb_f <- na.omit(tb_f)
+cor_tb_f = cor(tb_f)
+cor_tb_f
+```
+
+
+
+
+
+
+
 ```{r}
 rand_dyad <- read_csv("rand_dyad.csv")
 ```
@@ -350,4 +377,160 @@ fit_all <- sem(model_m, data = dyad_male_helper, estimator="MLMVS")
 summary(fit_all,standardized = TRUE, fit.measures = TRUE)
 semPaths(fit_all)
 ```
+
+#model
+```{r}
+#Use this!!!!!
+dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")
+model_free<- '
+            S_CESD ~ S_ADL  + S_self_health 
+            R_CESD ~ R_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_CESD ~~ R_CESD
+      '
+
+
+model_free<- '
+            S_CESD ~ S_ADL   + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL  + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+
+
+#Use this!!!!!
+model_constrain<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+model_constrain<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + c("b1", "b1") *S_self_health + R_self_health 
+            S_self_health ~ S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + c("b1", "b1") * S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+
+
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+
+  # S_self_health ~~ R_self_health
+#all group together
+allgroups.fit = sem(model_all, data = dyad_all_helper_final, meanstructure=TRUE, estimator= "MLMV")
+
+summary(allgroups.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#female
+female <- dyad_all_helper_final%>%
+  filter(sex == "2.Female")
+female.fit = sem(model_all, data = female, meanstructure=TRUE, estimator= "MLMV")
+
+summary(allgroups.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+
+
+#male
+male <- dyad_all_helper_final%>%
+  filter(sex == "1.Male")
+male.fit = sem(model_all, data = male, meanstructure=TRUE,estimator= "MLMV")
+
+summary(male.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#free
+#free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator= "MLMV", test="bootstrap")
+
+model_free<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+            
+
+            S_CESD ~~ R_CESD
+      '
+
+free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator="MLMV")
+
+
+summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+#constrained
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~  S_ADL + R_ADL
+            R_self_health ~ R_ADL +S_ADL +  S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ c("b1", "b1") *R_CESD
+      '
+
+model_constrain<- '
+            S_CESD ~ S_ADL  + S_self_health  
+            R_CESD ~ R_ADL + S_self_health + R_self_health 
+            S_self_health ~  S_ADL 
+            R_self_health ~ R_ADL + S_self_health 
+            
+            S_ADL ~~ R_ADL
+            S_CESD ~~ R_CESD
+      '
+model_constrain <- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL +S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL + S_self_health 
+  
+            S_CESD ~~ R_CESD
+      '
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV")
+summary(constrain.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV", group.equal = c("intercepts", "regressions"))
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", test="bootstrap")
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", group.equal = c("intercepts", "regressions"),estimator= "MLMV", fixed.x=FALSE, test="bootstrap")
+
+#constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", group.equal = c("intercepts", "regressions"), test="bootstrap")
+
+```
+
+
 
