@@ -28,5 +28,6 @@ tb1<- dyad_all_helper_final%>%
 CreateTableOne(data = tb1)
 CreateTableOne(data = tb1, strata = "sex")
 
+favstats(tb1$R_ADL)
 ```
 
