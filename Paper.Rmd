@@ -12,12 +12,19 @@ knitr::opts_chunk$set(echo = TRUE)
 library(stargazer)
 library(tableone)
 library(dplyr)
+library(lavaan)
+
+library(readr)
 ```
 
+# Read in data
 ```{r}
 dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")%>%
   select(-X1)
+```
 
+# Table One
+```{r}
 table(dyad_all_helper_final$hhour.z)
 
 tb1<- dyad_all_helper_final%>%
@@ -29,5 +36,99 @@ CreateTableOne(data = tb1)
 CreateTableOne(data = tb1, strata = "sex")
 
 favstats(tb1$R_ADL)
+<<<<<<< HEAD
+=======
 ```
 
+
+#Free Model
+```{r}
+#free model 
+model_free<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL 
+            
+            S_self_health~~ R_self_health
+            S_CESD ~~ R_CESD
+      '
+
+# Log ADL 
+model_free<- '
+            S_CESD ~ log_S_ADL  + S_self_health + R_self_health 
+            R_CESD ~ log_R_ADL + log_S_ADL + S_self_health + R_self_health 
+            S_self_health ~ log_S_ADL  + log_R_ADL
+            R_self_health ~log_R_ADL + log_S_ADL
+            
+            S_self_health~~ R_self_health
+            S_CESD ~~ R_CESD
+      '
+
+free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator="MLMV")
+
+
+summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+```
+
+
+
+```{r}
+#constrain model 
+model_constrain<- '
+            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
+            R_CESD ~ c("b1", "b1") *R_ADL + S_ADL + S_self_health + R_self_health 
+            S_self_health ~ S_ADL + R_ADL
+            R_self_health ~ R_ADL + S_ADL 
+
+            S_self_health~~ R_self_health
+            S_CESD ~~ R_CESD
+      '
+
+
+
+# Log ADL 
+model_constrain<- '
+            S_CESD ~ log_S_ADL  + S_self_health + R_self_health 
+            R_CESD ~ log_R_ADL + log_S_ADL + c("b1", "b1") *S_self_health + R_self_health 
+            S_self_health ~ log_S_ADL  + log_R_ADL
+            R_self_health ~log_R_ADL + log_S_ADL
+            
+            S_self_health~~ R_self_health
+            S_CESD ~~ R_CESD
+      '
+
+#constrain all
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV", group.equal = c("intercepts", "regressions"))
+
+
+#constrain only one path
+constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator = "MLMV")
+
+
+summary(constrain.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+```{r}
+#female
+female <- dyad_all_helper_final%>%
+  filter(sex == "2.Female")
+female.fit = sem(model_free, data = female, meanstructure=TRUE, estimator= "MLMV")
+
+summary(female.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+
+
+
+#male
+male <- dyad_all_helper_final%>%
+  filter(sex == "1.Male")
+male.fit = sem(model_free, data = male, meanstructure=TRUE,estimator= "MLMV")
+
+summary(male.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+>>>>>>> 3dd162a09dc968eb382043317d4b12d2fe458090
+```
+
+$\beta$
