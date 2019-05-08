@@ -7,7 +7,8 @@ output:
   html_document: default
 ---
 
-```{r}
+```{r message=FALSE, warning=FALSE}
+library(lavaan)
 #free model 
 dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")
 model_free<- '#direct effect
@@ -26,31 +27,8 @@ model_free<- '#direct effect
             total2 := c2+(a2*b2)
       '
 
-model_free<- '#direct effect
-            S_CESD ~ c*S_ADL 
-              #mediator
-            S_self_health ~ a*S_ADL
-            S_CESD ~ b*S_self_health
-            #indirect effect 
-            ab := a*b
-            #total effect 
-            total := c+(a*b)
-      '
 
-#free model 
-dyad_all_helper_final <- read_csv("data/dyad_all_helper_final.csv")
-model_free<- '
-            S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
-            R_CESD ~ R_ADL + S_ADL + S_self_health + R_self_health 
-            S_self_health ~ S_ADL + R_ADL
-            R_self_health ~ R_ADL + S_ADL 
-            
-            S_self_health ~~ R_self_health
-            S_CESD ~~ R_CESD
-      '
 free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator="MLMV")
-
-
 summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
 #male 
