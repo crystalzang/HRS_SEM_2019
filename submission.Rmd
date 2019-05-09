@@ -31,21 +31,6 @@ model_free<- '#direct effect
 free.fit = sem(model_free, data = dyad_all_helper_final, meanstructure=TRUE, group= "sex", estimator="MLMV")
 summary(free.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
-#male 
-male <- dyad_all_helper_final%>%
-  filter(sex == "1.Male")
-male.fit = sem(model_free, data = male, meanstructure=TRUE,estimator= "MLMV")
-
-summary(male.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
-
-#female
-female <- dyad_all_helper_final%>%
-  filter(sex == "2.Female")
-female.fit = sem(model_free, data = female, meanstructure=TRUE, estimator= "MLMV")
-
-summary(female.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
-
-
 #constrain model 
 model_constrain<- '
             S_CESD ~ S_ADL + R_ADL  + S_self_health  + R_self_health 
@@ -60,5 +45,18 @@ constrain.fit = sem(model_constrain, data = dyad_all_helper_final, meanstructure
 
 summary(constrain.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
+#male 
+male <- dyad_all_helper_final%>%
+  filter(sex == "1.Male")
+male.fit = sem(model_free, data = male, meanstructure=TRUE,estimator= "MLMV")
+
+summary(male.fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+#female
+female <- dyad_all_helper_final%>%
+  filter(sex == "2.Female")
+female.fit = sem(model_free, data = female, meanstructure=TRUE, estimator= "MLMV")
+
+summary(female.fit,standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 ```
 
