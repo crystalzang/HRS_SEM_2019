@@ -1,0 +1,302 @@
+---
+title: "data_submission"
+author: "Crystal Zang"
+date: "5/8/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(haven)
+library(data.table)
+library(ggplot2)
+library(mosaic)
+library(skimr)
+#functions
+'%ni%' <- Negate('%in%')
+```
+
+# Step 1: Rand data that contains study participants who answered ADL, CESD
+```{r}
+rand <- read_csv("randhrs.csv") ###set your own repository
+
+
+rand_2014 <- rand %>%
+  select(HHIDPN, HHID, PN, 
+         HACOHORT,  #cohort
+          R12CESD, S12CESD, #CESD Score, binary level yes or no
+         R12AGEY_E, S12AGEY_E,  #Age
+          R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
+        R12IADLA, S12IADLA, #IADL Summary: sum ADLs where Respondent reports any difficulty
+
+          R12OOPMD, S12OOPMD,  #Total expenditure
+         RAGENDER,  #gender
+         S12SHLT, R12SHLT, #self reported health
+         R12HSPTIM,  S12HSPTIM,  # Hospital stays, prv 2 yrs
+         R12HSPNIT, S12HSPNIT, # Nights in hosp, prv 2 yrs
+         R12NRSNIT, S12NRSNIT,  #Nights in nurs home, prv 2 yrs
+         R12WORK, S12WORK, #working for pay
+          R12IEARN, S12IEARN, #individual earning
+         R12TR20,  S12TR20, #memory recall
+         R12COGTOT,  S12COGTOT, #cognitive summary score
+         R12MSTOT,  S12MSTOT, #mental status score
+         R12HLTC, S12HLTC, #Health change (self reported health compared to last year)
+        R12DRUGS,  S12DRUGS,  #using drug
+        R12OUTPT, S12OUTPT, #surgery
+        R12SPCFAC, S12SPCFAC, #specific health service
+        R12CONDE, S12CONDE
+        )
+
+#rename
+setnames(rand_2014 ,
+         old=c("R12ADLA", "S12ADLA", "R12IADLA", "S12IADLA", "R12CESD", "S12CESD", "R12OOPMD", "S12OOPMD", "RAGENDER", "HACOHORT", "R12AGEY_E", "S12AGEY_E", 
+               "R12SHLT", "S12SHLT", 
+               "R12HSPTIM", "S12HSPTIM",
+               "R12HSPNIT", "S12HSPNIT",
+               "R12WORK", "S12WORK",
+               "R12IEARN", "S12IEARN",
+               "R12TR20", "S12TR20",
+               "R12COGTOT", "S12COGTOT",
+               "R12MSTOT", "S12MSTOT",
+               "R12HLTC", "S12HLTC",
+               "R12DRUGS", "S12DRUGS",
+               "R12OUTPT", "S12OUTPT",
+               "R12SPCFAC", "S12SPCFAC",
+               "R12CONDE", "S12CONDE"
+               ),
+         
+         new = c("R_ADL", "S_ADL","R_IADL", "S_IADL", "R_CESD", "S_CESD", "R_expense", "S_expense", "sex", "cohort", "R_age","S_age", 
+                "R_self_health", "S_self_health",
+                "R_hostital_stay","S_hostital_stay",
+                "R_nights_hospital","S_nights_hospital",
+                "R_work_pay",  "S_work_pay",
+                "R_income_i", "S_income_i", 
+                "R_memory", "S_memory",
+                "R_cog_score", "S_cog_score",
+                "R_mental_score", "S_mental_score",
+                "R_self_health_change","S_self_health_change",
+                "R_drug", "S_drug",
+                "R_surgery", "S_surgery",
+                "R_special_hservice", "S_special_hservice",
+                "R_health_condition", "S_health_condition"
+                
+                ))
+
+#We filter out Respondent ADL na
+rand_2014_R_valid <- rand_2014%>%
+  filter(!is.na(R_ADL), !is.na(R_CESD))
+```
+
+
+# Helper READ IN
+About `1-nrow(helper) /nrow(H14G_HP)` = 50.5% helpers were spouse.  We excluded 49.5% of data.
+After filtering out helpers who had invalid helper hour, left us 1243 unique helper in data. 
+```{r}
+#year: 2014
+helper <- read_sav("H14G_HP.sav", encoding = NULL, user_na = FALSE) ##set your own repository
+
+###VARIBALE
+
+H14G_HP$HHID<- as.numeric(H14G_HP$HHID)
+H14G_HP$PN<- as.numeric(H14G_HP$PN)
+H14G_HP$OPN_SP<- as.numeric(H14G_HP$OPN_SP)
+
+helper<- helper%>%
+  filter(!is.na(OPN_SP))%>%
+  filter(OPN_SP %ni% c("","811", "812", "821", "831", "832", "841", "822"))%>%
+#  mutate(respondent_id= paste(HHID, PN, sep=""), spouse_id=paste(HHID, OPN_SP, sep=""))  ##same edit 
+  mutate(respondent_id= 1000*HHID + PN, spouse_id=1000*HHID + OPN_SP)
+
+helper <- helper%>%
+  filter(OG069 == "2")
+
+#convert NA value in month/wk/day to 0 
+helper<- helper %>%
+  mutate(OG070 = coalesce(OG070,0),
+         OG071 = coalesce(OG071,0),
+         OG072 = coalesce(OG072,0),
+         OG073 = coalesce(OG073,0))
+
+#filter out useless values in month/wk/day/hr
+helper <- helper %>%
+  filter(OG070 %in% 0:31,
+         OG071 %in% 0:7,
+         OG072 %in% 0:1,
+         OG073 %in% 1:24)
+
+#calculate helping hours (assume that one month has 4 weeks and 30 days)
+helper <-helper%>%
+  mutate(helper_time= OG070*OG073+OG071*4*OG073+OG072*30*OG073)
+
+#helper_unique <- helper[!duplicated(helper$spouse_id), ]
+#nrow(helper_unique)
+
+# prep for joining with the rand data 
+helper_id <- helper%>%
+  select(respondent_id, spouse_id, helper_time) %>% 
+  mutate(helper="Y")
+```
+
+
+# Join Rand with helper
+
+```{r}
+#Join helper with spouse in RAND, indicating spouses who are helpers
+class(rand_2014_R_valid$HHIDPN)
+
+helper_id$respondent_id<- as.character(helper_id$respondent_id)
+rand_2014_R_valid$HHIDPN<-as.character(rand_2014_R_valid$HHIDPN)     
+
+helper <- left_join(rand_2014_R_valid, helper_id, by= c("HHIDPN"= "respondent_id"))%>%
+  filter(helper=="Y")%>%
+  mutate(helper_status = "helper")
+```
+
+# Dyad: Women helper 
+```{r}
+helper$spouse_id<-as.character(helper$spouse_id)
+
+helper_f <- helper %>%
+  filter(sex=="2.Female")
+
+helper_f_id<-helper_f%>%
+  select(spouse_id)%>%
+  as.data.frame()
+
+helper_f_spouse <- left_join(helper_f_id, rand_2014_R_valid, by= c("spouse_id" = "HHIDPN"))%>%
+  mutate(helper_status = "not helper", helper_time = 0)
+
+names(helper_f_spouse)[1]<- "HHIDPN"
+helper_f<- helper_f%>%
+  select(-spouse_id, -helper)
+
+dyad_helper_f <- rbind(helper_f, helper_f_spouse)
+
+#Valid dyad HHID 
+id_valid_dyad_id <- id_group%>%
+  filter(N==2)%>%
+  select(HHID)%>%
+  mutate(dyad = "Y")
+
+#First join: identify people who are in dyad
+dyad_helper_f_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+  filter(dyad == "Y")
+
+#Second join: get information about helper status
+dyad_helper_f_id <- dyad_helper_f%>%
+  select(HHIDPN, helper_status, helper_time)
+
+dyad_helper_f_join2 <- left_join(dyad_helper_f_join1 , dyad_helper_f_id, by="HHIDPN")
+
+#write.csv(dyad_helper_f_join2, file="~/Desktop/HRS_SEM_2019/data/dyad_helper_f.csv", row.names = F)
+```
+
+
+# Dyad: Male helper
+```{r}
+helper_m <- helper %>%
+  filter(sex=="1.Male")
+
+helper_m_id<-helper_m%>%
+  select(spouse_id)%>%
+  as.data.frame()
+
+helper_m_spouse <- left_join(helper_m_id, rand_2014_R_valid , by= c("spouse_id" = "HHIDPN"))%>%
+  mutate(helper_status = "not helper", helper_time = 0)
+
+names(helper_m_spouse)[1]<- "HHIDPN"
+helper_m<- helper_m%>%
+  select(-spouse_id, -helper)
+
+dyad_helper_m <- rbind(helper_m, helper_m_spouse)
+
+#Valid dyad HHID 
+id_valid_dyad_id <- id_group%>%
+  filter(N==2)%>%
+  select(HHID)%>%
+  mutate(dyad = "Y")
+
+#First join: identify people who are in dyad
+dyad_helper_m_join1 <- left_join(rand_2014_R_valid, id_valid_dyad_id, by="HHID")%>%
+  filter(dyad == "Y")
+#Second join: get information about helper status
+dyad_helper_m_id <- dyad_helper_m%>%
+  select(HHIDPN, helper_status, helper_time)
+
+dyad_helper_m_join2 <- left_join(dyad_helper_m_join1 , dyad_helper_m_id, by="HHIDPN")
+
+#write.csv(dyad_helper_m_join2, file="~/Desktop/HRS_SEM_2019/data/dyad_helper_m.csv", row.names = F)
+```
+
+
+# Preping for model fitting
+```{r}
+dyad_female_helper<- dyad_helper_f%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4, 5))))) %>%
+  filter(sex=="2.Female")%>%   #gender
+  filter(R_ADL>0)
+
+
+dyad_male_helper<- dyad_helper_m%>%
+  mutate(S_self_health = if_else(S_self_health == "1.Excellent", 1,
+                         if_else(S_self_health == "2.Very good", 2,
+                         if_else(S_self_health == "3.Good", 3,
+                         if_else(S_self_health == "4.Fair", 4,5)))))%>%
+  mutate(R_self_health = if_else(R_self_health == "1.Excellent", 1,
+                         if_else(R_self_health == "2.Very good", 2,
+                         if_else(R_self_health == "3.Good", 3,
+                         if_else(R_self_health == "4.Fair", 4, 5))))) %>%
+  filter(sex=="1.Male")%>%   #gender
+  filter(R_ADL>0)
+
+dyad_all_helper <- rbind(dyad_male_helper, dyad_female_helper)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################
+# Unique Participants
+```{r}
+id_m<-dyad_helper_m_join2%>%
+  select(HHIDPN) #Already unique
+
+id_f<-dyad_helper_f_join2%>%
+  select(HHIDPN)#Already unique
+
+#list of unique id
+id <- rbind(id_m, id_f)
+id_unique<-id[!duplicated(id$HHIDPN), ]
+id_ls <- id_unique$HHIDPN
+
+#In f but not in m 
+dyad_diff <- anti_join(dyad_helper_m_join2, dyad_helper_f_join2, by="HHIDPN")
+
+dyad_all<-rbind(dyad_helper_f_join2, dyad_diff)
+table(dyad_all$R_ADL)
+
+data <- dyad_all%>%
+  filter(R_ADL > 0)
+
+#write.csv(dyad_all, file="~/Desktop/HRS_SEM_2019/data/dyad_all.csv", row.names = F)
+```
