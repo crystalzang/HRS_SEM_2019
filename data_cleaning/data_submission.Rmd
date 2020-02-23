@@ -20,7 +20,7 @@ library(skimr)
 
 # Step 1: Rand data that contains study participants who answered ADL, CESD
 ```{r}
-rand <- read_csv("randhrs.csv") ###set your own repository
+rand <- read_csv("./data/randhrs.csv") ###set your own repository
 
 
 rand_2014 <- rand %>%

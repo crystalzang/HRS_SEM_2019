@@ -20,7 +20,8 @@ library(skimr)
 
 
 ```{r}
-rand <- read_csv("~/Desktop/data/randhrs.csv")
+
+rand <- read_csv("/Users/czang/Documents/HRS_SEM_2019/data/raw/randhrs.csv")
 
 #R12CONDE (health condition)
 

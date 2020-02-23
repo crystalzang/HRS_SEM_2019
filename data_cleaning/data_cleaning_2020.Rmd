@@ -1,0 +1,46 @@
+---
+title: "data_cleaning_2020"
+author: "Ziwei Crystal Zang"
+date: "2/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/czang/Documents/HRS_SEM_2019/data/raw/")
+
+
+
+rand_h16_R <- read_csv("/Users/czang/Documents/HRS_SEM_2019/data/raw/h16_R_all.csv") ###set your own repository
+
+
+rand_2016 <- rand %>%
+  select(HHIDPN, HHID, PN, 
+         HACOHORT,  #cohort
+          R12CESD, S12CESD, #CESD Score, binary level yes or no
+         R12AGEY_E, S12AGEY_E,  #Age
+          R12ADLA, S12ADLA, #ADL Summary: sum ADLs where Respondent reports any difficulty
+        R12IADLA, S12IADLA, #IADL Summary: sum ADLs where Respondent reports any difficulty
+
+          R12OOPMD, S12OOPMD,  #Total expenditure
+         RAGENDER,  #gender
+         S12SHLT, R12SHLT, #self reported health
+         R12HSPTIM,  S12HSPTIM,  # Hospital stays, prv 2 yrs
+         R12HSPNIT, S12HSPNIT, # Nights in hosp, prv 2 yrs
+         R12NRSNIT, S12NRSNIT,  #Nights in nurs home, prv 2 yrs
+         R12WORK, S12WORK, #working for pay
+          R12IEARN, S12IEARN, #individual earning
+         R12TR20,  S12TR20, #memory recall
+         R12COGTOT,  S12COGTOT, #cognitive summary score
+         R12MSTOT,  S12MSTOT, #mental status score
+         R12HLTC, S12HLTC, #Health change (self reported health compared to last year)
+        R12DRUGS,  S12DRUGS,  #using drug
+        R12OUTPT, S12OUTPT, #surgery
+        R12SPCFAC, S12SPCFAC, #specific health service
+        R12CONDE, S12CONDE
+        )
+```
+
